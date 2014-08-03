@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="login_username_edittext_height">50.0dip</dimen>
+    <dimen name="login_password_edittext_height">50.0dip</dimen>
+    <dimen name="common_topbar_high">54.0dip</dimen>
+    <dimen name="common_right_image_text_width">64.0dip</dimen>
+    <dimen name="common_main_left_location_text_width">68.0dip</dimen>
+	<dimen name="common_card_layout_left">10.0dip</dimen>
+	<dimen name="common_card_layout_right">10.0dip</dimen>
+	<dimen name="common_listitem_singleline_high">50.0dip</dimen>
+	
+</resources>

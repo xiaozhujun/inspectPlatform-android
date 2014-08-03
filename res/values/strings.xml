@@ -1,0 +1,51 @@
+<resources>
+
+    <string name="app_name">智能点检平台</string>
+  
+  
+  <!-- 登录界面相关 -->
+    <string name="logo_name">起重机械</string>
+    <string name="project_name">智能点检平台</string>
+    <string name="divider">分割线</string>
+    <string name="login_uname">请输入用户名</string>
+    <string name="login_password">请输入密码</string>
+    <string name="show_password">显示密码</string>
+    <string name="login_rem_pwd">记住密码</string>
+    <string name="login_login">登录</string>
+    
+    <!-- 主界面相关 -->
+	<string name="main_title">功能选择</string>
+	<string name="topbar_right_text">配置</string>
+	
+	<!-- 任务界面相关 -->
+	<string name="task_title">任务列表</string>
+	
+	<!-- 点检界面相关  -->
+	<string name="scanTag">扫描标签</string>
+	<string name="normal">正常</string>
+	<string name="abnormal">异常</string>
+	<string name="unknown">未知</string>
+	<string name="comments">添加备注</string>
+	<string name="menu">菜单</string>
+	
+	<!-- 点检历史界面相关 -->
+	<string name="history_title">点检历史</string>
+	<string name="edit">编辑</string>
+	<string name="unuploaded">未上传</string>
+	<string name="uploaded">已上传</string>
+	<string name="upload">上传</string>
+	<string name="select_all">全选</string>
+	<string name="inverse">取消</string>
+	<string name="delete">删除</string>
+	<string name="no_record">"没有找到点检记录
+在点检界面保存点检结果后，可在此页面查询点检记录！"</string>
+
+	<!-- 上传界面相关 -->
+	
+	<string name="userName">点检人：</string>
+	<string name="inspectTime">点检时间：</string>
+	<string name="filePath">保存路径：</string>
+	<string name="uploadResult">上传点检结果</string>
+	<string name="uploadNow">现在上传</string>
+	<string name="uploadLater">暂不上传</string>
+</resources>

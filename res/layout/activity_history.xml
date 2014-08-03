@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical" >
+
+    <include
+        android:id="@+id/RelativeLayout_favor_topleft"
+        layout="@layout/common_top_bar_history" />
+
+    <LinearLayout
+        android:id="@+id/LinearLayout_fav_content"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:layout_below="@id/RelativeLayout_favor_topleft"
+        android:background="@color/listdef"
+        android:orientation="horizontal" >
+
+        <RelativeLayout
+            android:id="@+id/no_collection"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" >
+
+            <ImageView
+                android:id="@+id/fav_empty_hint_img"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentTop="true"
+                android:layout_centerHorizontal="true"
+                android:layout_marginTop="55dp"
+                android:contentDescription="@string/app_name"
+                android:src="@drawable/fav_empty_bg" />
+
+            <TextView
+                android:id="@+id/fav_empty_hint_text"
+                style="@style/Text.NoDataHint"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:layout_alignParentLeft="true"
+                android:layout_below="@+id/fav_empty_hint_img"
+                android:text="@string/no_record" />
+
+        </RelativeLayout>
+
+        <ListView
+            android:id="@+id/listView_history"
+            style="@style/ListView.defListEx"
+            android:layout_width="fill_parent"
+            android:layout_height="fill_parent" 
+            />
+    </LinearLayout>
+
+    <FrameLayout
+        android:id="@+id/bottom_bar"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:background="@drawable/common_btn_normal"
+        android:visibility="gone" >
+
+        <RelativeLayout
+            android:id="@+id/syncinfo"
+            android:layout_width="fill_parent"
+            android:layout_height="50.0dip"
+            android:background="@android:color/transparent"
+            android:orientation="horizontal" >
+
+            <LinearLayout
+                android:id="@+id/fav_bat_del"
+                android:layout_width="fill_parent"
+                android:layout_height="43.0dip"
+                android:layout_margin="3dp"
+                android:background="@android:color/transparent"
+                android:gravity="center_vertical"
+                android:orientation="horizontal" >
+
+                <Button
+                    android:id="@+id/btnCancelAll"
+                    android:layout_width="0.0dip"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="15.0dip"
+                    android:layout_weight="1.0"
+                    android:background="@drawable/btn_default"
+                    android:text="@string/inverse"
+                    android:textColor="#ff000000" />
+
+                <Button
+                    android:id="@+id/btnSelAll"
+                    android:layout_width="0.0dip"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="10.0dip"
+                    android:layout_marginRight="10.0dip"
+                    android:layout_weight="1.0"
+                    android:background="@drawable/btn_default"
+                    android:text="@string/select_all"
+                    android:textColor="#ff000000" />
+
+                <Button
+                    android:id="@+id/btnDelAll"
+                    android:layout_width="0.0dip"
+                    android:layout_height="wrap_content"
+                    android:layout_marginRight="15.0dip"
+                    android:layout_weight="1.0"
+                    android:background="@drawable/btn_default"
+                    android:text="@string/delete"
+                    android:textColor="#ff000000" />
+
+                <Button
+                    android:id="@+id/btnUpload"
+                    android:layout_width="0.0dip"
+                    android:layout_height="wrap_content"
+                    android:layout_marginRight="15.0dip"
+                    android:layout_weight="1.0"
+                    android:background="@drawable/btn_default"
+                    android:text="@string/upload"
+                    android:textColor="#ff000000" />
+            </LinearLayout>
+        </RelativeLayout>
+    </FrameLayout>
+
+</RelativeLayout>

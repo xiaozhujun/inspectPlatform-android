@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:weightSum="10" >
+
+    <include layout="@layout/common_top_bar" />
+
+    <ExpandableListView
+        android:id="@+id/explistView"
+        android:layout_width="wrap_content"
+        android:layout_height="0dip"
+        android:layout_weight="8.5"
+        android:groupIndicator="@null" >
+    </ExpandableListView>
+
+    <RelativeLayout
+        android:layout_width="fill_parent"
+        android:layout_height="0dip"
+        android:background="@drawable/route_bottom_bar_bg"
+        android:layout_weight="1.5" >
+
+        <Button
+            android:id="@+id/scanTag"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerHorizontal="true"
+            android:layout_centerInParent="true"
+            android:layout_centerVertical="true"
+            android:layout_margin="3dp"
+            android:background="@drawable/common_btn_selector"
+            android:text="@string/scanTag" />
+    </RelativeLayout>
+
+</LinearLayout>

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<lint>
+    <issue id="UseCompoundDrawables">
+        <ignore path="res/layout/grid_item_main.xml" />
+    </issue>
+    <issue id="UselessParent">
+        <ignore path="res/layout/activity_upload.xml" />
+        <ignore path="res/layout/activity_upload2.xml" />
+    </issue>
+</lint>
