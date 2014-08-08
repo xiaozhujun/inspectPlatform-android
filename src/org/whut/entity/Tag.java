@@ -5,10 +5,11 @@ import java.util.List;
 
 import android.os.Parcel;
 import android.os.Parcelable;
+import android.util.Log;
 
+import org.whut.exception.ArgumentException;
 
 public class Tag implements Listable{
-	
 	private final String cardType = "0x02";
 	private String deviceType;
 	private String deviceTypeNum;
@@ -19,9 +20,8 @@ public class Tag implements Listable{
 	
 	public final int PROPERTY_COUNT = 4;
 	
-	public Tag(){}
-	
 	public static final Parcelable.Creator<Tag> CREATOR = new Parcelable.Creator<Tag>() { 
+		
         public Tag createFromParcel(Parcel p) { 
             return new Tag(p); 
         } 
@@ -30,14 +30,17 @@ public class Tag implements Listable{
             return new Tag[size]; 
         } 
     }; 
+    
+    public Tag(){}
 	
-	public Tag(String data){
+	public Tag(String data) throws ArgumentException{
 		if(data!=null){
 			String[] d = data.split(",");
 			tagArea = d[1];
 			deviceNum = d[3];
 			tagAreaNum = d[4];
 		}else{
+			throw new ArgumentException("参数不正确");
 		}
 	}
 
@@ -47,21 +50,28 @@ public class Tag implements Listable{
 		this.tagAreaNum = p.readString();
 	}
 	
+	@Override
 	public void writeToParcel(Parcel dest, int flags) {
 		dest.writeString(tagArea);
 		dest.writeString(deviceNum);
 		dest.writeString(tagAreaNum);
 	}
 	
+	@Override
 	public void setByList(List<String> params){
-		if(params.size()==PROPERTY_COUNT){
+		if(params.size()>3){
 			this.tagArea = params.get(1);
-			this.deviceNum = params.get(2);
-			this.tagAreaNum = params.get(3);
+			this.tagAreaNum = params.get(2);
+			this.deviceNum = params.get(3);
+			for(int i=4;i<params.size();i++){
+				this.deviceNum+=params.get(i);
+			}
 		}else{
+			Log.e("org.whut.Tag", "参数不正确！");
 		}
 	}
 	
+	@Override
 	public int getPropertyCount(){
 		return PROPERTY_COUNT;
 	}
@@ -71,12 +81,29 @@ public class Tag implements Listable{
 		ArrayList<String> params = new ArrayList<String>();
 		params.add(cardType);
 		params.add(tagArea);
-		params.add(deviceNum); 
 		params.add(tagAreaNum);
+		
+		if(deviceNum.length()<16){
+			params.add(deviceNum);
+		}else{
+			int count=0;
+			for(;count<deviceNum.length();){
+				if(count+15<=deviceNum.length()){
+					params.add(deviceNum.substring(count, count+15));
+					count+=15;
+				}else{
+					params.add(deviceNum.substring(count, deviceNum.length()));
+					count=deviceNum.length();
+				}
+				
+			}
+		}
+		 
 		
 		return params;
 	}
 	
+	@Override
 	public int describeContents() {
 		// TODO Auto-generated method stub
 		return 0;
