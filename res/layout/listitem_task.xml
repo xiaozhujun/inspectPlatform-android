@@ -2,46 +2,96 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="fill_parent"
     android:layout_height="wrap_content"
-    android:orientation="vertical" 
     android:background="@drawable/listitem_task_background"
-    android:padding="10dp"
-    >
+    android:orientation="vertical"
+    android:padding="10dp" >
 
-        <ImageView
-            android:id="@+id/image_task"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="5dp"
-            android:contentDescription="@string/app_name"
-            />
+    <ImageView
+        android:id="@+id/image_task"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="5dp"
+        android:contentDescription="@string/app_name" />
+
+    <TextView
+        android:id="@+id/taskName"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBottom="@+id/image_task"
+        android:layout_marginLeft="17dp"
+        android:layout_toRightOf="@id/image_task"
+        android:textAppearance="?android:attr/textAppearanceLarge" />
+
+    <RelativeLayout
+        android:id="@+id/relativeLayout1"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/image_task"
+        android:layout_margin="10dp"
+        android:layout_toLeftOf="@+id/tv_status"
+        android:background="@drawable/bg_lookaround_reason"
+        android:padding="5dp" >
 
         <TextView
-            android:id="@+id/taskName"
+            android:id="@+id/startTime"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_alignBottom="@+id/image_task"
-            android:layout_marginLeft="17dp"
-            android:layout_toRightOf="@id/image_task"
-            android:textAppearance="?android:attr/textAppearanceLarge" />
+            android:layout_margin="5dp"
+            android:text="@string/startTime"
+             />
 
-        <ImageView
-            android:id="@+id/image_arrow"
+        <TextView
+            android:id="@+id/endTime"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_alignLeft="@+id/startTime"
+            android:layout_below="@+id/startTime"
+            android:layout_marginBottom="5dp"
+            android:layout_marginRight="5dp"
+            android:layout_marginTop="5dp" 
+            android:text="@string/endTime"/>
+
+        <TextView
+            android:id="@+id/startTime_data"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_above="@+id/endTime"
             android:layout_alignParentRight="true"
-            android:layout_centerVertical="true"
-            android:src="@drawable/activity_loc_arrow" 
-            android:contentDescription="@string/app_name"
-            />
+            android:layout_margin="5dp"
+            android:layout_toRightOf="@+id/startTime"
+            android:gravity="center" />
 
         <TextView
-            android:id="@+id/tv_status"
+            android:id="@+id/endTime_data"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_centerVertical="true"
-            android:layout_marginRight="40dp"
-            android:layout_toLeftOf="@id/image_arrow"
-            android:textAppearance="?android:attr/textAppearanceMedium"
-            android:textColor="@color/Grey" />
+            android:layout_alignBaseline="@+id/endTime"
+            android:layout_alignBottom="@+id/endTime"
+            android:layout_alignParentRight="true"
+            android:layout_margin="5dp"
+            android:layout_toRightOf="@+id/endTime"
+            android:gravity="center" />
+    </RelativeLayout>
+
+    <ImageView
+        android:id="@+id/image_arrow"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentRight="true"
+        android:layout_centerVertical="true"
+        android:layout_marginRight="14dp"
+        android:contentDescription="@string/app_name"
+        android:src="@drawable/activity_loc_arrow" />
+
+    <TextView
+        android:id="@+id/tv_status"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBaseline="@+id/taskName"
+        android:layout_alignBottom="@+id/taskName"
+        android:layout_toLeftOf="@+id/image_arrow"
+        android:gravity="center"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:textColor="@color/Grey" />
 
 </RelativeLayout>

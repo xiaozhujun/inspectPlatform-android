@@ -1,12 +1,12 @@
 package org.whut.service;
 
-
-import org.whut.platform.MainActivity;
+import org.whut.entity.Location;
 import org.whut.utils.LocationInit;
-
 import com.baidu.location.BDLocation;
 import com.baidu.location.BDLocationListener;
 import com.baidu.location.LocationClient;
+import com.baidu.mapapi.BMapManager;
+import com.baidu.mapapi.MKGeneralListener;
 import com.baidu.mapapi.search.MKAddrInfo;
 import com.baidu.mapapi.search.MKBusLineResult;
 import com.baidu.mapapi.search.MKDrivingRouteResult;
@@ -18,25 +18,49 @@ import com.baidu.mapapi.search.MKSuggestionResult;
 import com.baidu.mapapi.search.MKTransitRouteResult;
 import com.baidu.mapapi.search.MKWalkingRouteResult;
 import com.baidu.platform.comapi.basestruct.GeoPoint;
-
-
+import android.annotation.SuppressLint;
 import android.app.Service;
+
 import android.content.Intent;
+
+import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
 import android.util.Log;
+import android.widget.Toast;
 
 public class LocationService extends Service implements BDLocationListener{
 
+	public BMapManager mapManager = null;
 	public LocationClient mLocationClient = null;
 	public MKSearch mkSearch;
-
+	
 	private double latitude;
 	private double longtitude;
 	private GeoPoint point;
 	
-	private String info;
-
+	private String address;
+	private String city;
+	private Location locationData;
+	
+	//发送定位请求的Activity
+	private String activity = null;
+	
+	
+	@SuppressLint("HandlerLeak")
+	private Handler handler = new Handler(){
+		public void handleMessage(Message msg) {
+			Log.i("MyService", "----------handleMessage()");
+			Intent serviceIntent = new Intent();
+			Log.i("msg",activity);
+			serviceIntent.setAction(activity);
+			serviceIntent.putExtra("locationData", locationData);
+			serviceIntent.putExtra("city", city);
+			serviceIntent.putExtra("locationService", true);
+			sendBroadcast(serviceIntent);
+		};
+	};
+	
 	
 	@Override
 	public void onReceiveLocation(BDLocation arg0) {
@@ -46,21 +70,15 @@ public class LocationService extends Service implements BDLocationListener{
 		latitude = arg0.getLatitude();
 		longtitude = arg0.getLongitude();
 		
-		
 		point = new GeoPoint((int)(latitude * 1e6),(int)(longtitude * 1e6));
 		
 		//地址反解析
 		mkSearch.reverseGeocode(point);
 		
-		Message message = Message.obtain();
+		locationData.setLat(latitude+"");
 		
-		message.obj = latitude+";"+longtitude;
-		
-		//获取经纬度信息成功
-		message.what = 3;
-		
-		MainActivity.handler.sendMessage(message);
-		
+		locationData.setLng(longtitude+"");
+	
 		mLocationClient.stop();
 	}
 
@@ -84,10 +102,34 @@ public class LocationService extends Service implements BDLocationListener{
 		super.onCreate();
 		Log.i("MyService", "------> onCreate()");
 	
+		mapManager = new BMapManager(getApplicationContext());
+		
+		mapManager.init(new MKGeneralListener() {
+
+			@Override
+			public void onGetPermissionState(int arg0) {
+
+				Toast.makeText(getApplicationContext(),
+						"密钥错误", Toast.LENGTH_SHORT).show();
+			}
+
+			@Override
+			public void onGetNetworkState(int arg0) {
+
+				Toast.makeText(getApplicationContext(),
+
+						"网络错误", Toast.LENGTH_SHORT).show();
+			}
+		});
+		
+		
+		locationData = new Location();
+		
 		mLocationClient = new LocationClient(getApplicationContext());
 		
 		mkSearch = new MKSearch();
-		mkSearch.init(MainActivity.mapManager, new MySearchListener());
+		
+		mkSearch.init(mapManager, new MySearchListener());
 		
 		//为LocationClient设置监听器，一旦获取了结果，会回调listener中的onReceiveLocation方法
 		mLocationClient.registerLocationListener(this);
@@ -104,13 +146,17 @@ public class LocationService extends Service implements BDLocationListener{
 		Log.i("MyService", "------> onDestroy()");
 		if(mLocationClient.isStarted()){
 			mLocationClient.stop();
-		}
+		}		
 	}
 
 	@Override
 	public int onStartCommand(Intent intent, int flags, int startId) {
 		// TODO Auto-generated method stub
 		Log.i("MyService", "------> onStartCommand()");
+		
+		activity = intent.getStringExtra("activity");
+		
+		Log.i("MyService", "------->"+activity+"正在调用LocationService");
 		
 		return super.onStartCommand(intent, flags, startId);
 	}
@@ -129,20 +175,13 @@ public class LocationService extends Service implements BDLocationListener{
 		public void onGetAddrResult(MKAddrInfo arg0, int arg1) {
 			// TODO Auto-generated method stub
 			if (arg1!= 0 || arg0 == null) {
-				Message msg = Message.obtain();
-				//定位失败
-				msg.what = 4;
-				MainActivity.handler.sendMessage(msg);
+				Log.i("MyService", "----->onGetAddrResult 参数空");
 			} else {
 				Log.i("MyService", "------>onGetAddrResult()");
-				info = arg0.strAddr+";"+arg0.addressComponents.city;
-				Message msg = Message.obtain();
-				//定位成功
-				msg.what = 5;
-				//info=解析出来的地址+“;”+解析出的城市信息
-				msg.obj = info;
-				Log.i("msg", info);
-				MainActivity.handler.sendMessage(msg);
+				city = arg0.addressComponents.city;
+				address = arg0.strAddr;				
+				locationData.setAddress(address);
+				handler.sendEmptyMessage(0);
 			}
 		}
 
@@ -196,5 +235,6 @@ public class LocationService extends Service implements BDLocationListener{
 		}
 		
 	}
+	
 	
 }

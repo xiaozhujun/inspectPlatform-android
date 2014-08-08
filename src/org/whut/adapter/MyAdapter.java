@@ -51,6 +51,8 @@ public class MyAdapter extends BaseAdapter{
 			convertView = inflater.inflate(R.layout.listitem_task, null);
 			holder.image_task = (ImageView) convertView.findViewById(R.id.image_task);
 			holder.task_name = (TextView) convertView.findViewById(R.id.taskName);
+			holder.startTime = (TextView) convertView.findViewById(R.id.startTime_data);
+			holder.endTime = (TextView) convertView.findViewById(R.id.endTime_data);
 			holder.task_status = (TextView) convertView.findViewById(R.id.tv_status);
 			holder.arrow = (ImageView) convertView.findViewById(R.id.image_arrow);
 			convertView.setTag(holder);
@@ -66,12 +68,16 @@ public class MyAdapter extends BaseAdapter{
 			holder.task_status.setText("未完成");
 		}
 		holder.task_name.setText(list.get(position).get("planName").toString());
+		holder.startTime.setText(list.get(position).get("startTime")+":00");
+		holder.endTime.setText(list.get(position).get("endTime")+":00");
 		return convertView;
 	}
 	
 	public static class ViewHolder{
 		ImageView image_task;
 		TextView task_name;
+		TextView startTime;
+		TextView endTime;
 		TextView task_status;
 		ImageView arrow;
 	}

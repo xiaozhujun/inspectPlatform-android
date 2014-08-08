@@ -66,5 +66,25 @@ public class UserServiceDao implements UserService{
 		return null;
 	}
 
+	public String findNameByUserName(String userName) {
+		// TODO Auto-generated method stub
+		Cursor cursor = db.rawQuery("select * from user where username=?", new String[]{userName});
+		while(cursor.moveToNext()){
+			return cursor.getString(cursor.getColumnIndex("name"));
+		}
+		return null;
+	}
+
+	public String findImageByUserName(String userName) {
+		// TODO Auto-generated method stub
+		Cursor cursor = db.rawQuery("select * from user where username=?", new String[]{userName});
+		while(cursor.moveToNext()){
+			return cursor.getString(cursor.getColumnIndex("image"));
+		}
+		return null;
+	}
+	
+	
+
 
 }

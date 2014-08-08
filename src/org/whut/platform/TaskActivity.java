@@ -72,6 +72,8 @@ public class TaskActivity extends Activity{
 			//任务编号
 			map.put("Id", taskData.get(i).getId());
 			map.put("localStatus", dao.checkLocalStatus(taskData.get(i).getId()));
+			map.put("startTime", taskData.get(i).getTimeStart());
+			map.put("endTime", taskData.get(i).getTimeEnd());
 			data.add(map);
 		}
 		

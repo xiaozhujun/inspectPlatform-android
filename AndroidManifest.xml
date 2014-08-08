@@ -41,6 +41,7 @@
             </intent-filter>
         </activity>
         <activity android:name="org.whut.platform.MainActivity" />
+        <activity android:name="org.whut.platform.ProjectActivity" />
         <activity android:name="org.whut.platform.TaskActivity" />
         <activity android:name="org.whut.platform.HistoryActivity" />
         <activity android:name="org.whut.platform.UploadActivity" />

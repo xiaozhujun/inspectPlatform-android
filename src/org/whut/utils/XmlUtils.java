@@ -5,6 +5,8 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+
 import org.dom4j.Document;
 import org.dom4j.Element;
 import org.dom4j.io.OutputFormat;
@@ -26,8 +28,15 @@ public class XmlUtils {
 		List<Element> elist = root.elements();
 		for(Element e : elist){
 			if(e.attribute("name").getValue().equals(userRole)){
-				Element ti = e.element("TableItem");
-				list.add(ti.attribute("name").getValue());
+				if(e.elements().size()>1){
+					List<Element> list2 = e.elements();
+					for(Element e2:list2){
+						list.add(e2.attribute("name").getValue());
+					}
+				}else{
+					Element ti = e.element("TableItem");
+					list.add(ti.attribute("name").getValue());
+				}
 			}
 		}
 		return list;
@@ -67,7 +76,7 @@ public class XmlUtils {
 		return list;
 	}
 
-	public static void saveInspectResult(List<List<Integer>> result, String filePath) throws Exception{
+	public static void saveInspectResult(List<List<Map<String,String>>> commentList,List<List<Integer>> result, String filePath) throws Exception{
 		// TODO Auto-generated method stub
 		SAXReader reader = new SAXReader();
 		Document document = reader.read(new File(filePath));
@@ -88,6 +97,8 @@ public class XmlUtils {
 					list2.get(j).element("value").attribute("name").setValue("无");
 					break;
 				}
+				
+				list2.get(j).element("value").attribute("comment").setValue(commentList.get(i).get(j).get("comment"));
 			}
 		}
 		OutputFormat format = OutputFormat.createPrettyPrint();
@@ -146,7 +157,7 @@ public class XmlUtils {
 		Document document = reader.read(new File(filePath));
 		Element root = document.getRootElement();
 		root.attribute("devicenumber").setValue(deviceNum);
-		
+
 		OutputFormat format=OutputFormat.createPrettyPrint();
 		String ENCODING="UTF-8";
 		format.setEncoding(ENCODING);

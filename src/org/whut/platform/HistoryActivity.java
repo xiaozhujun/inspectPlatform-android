@@ -16,6 +16,7 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.AlertDialog.Builder;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
@@ -24,6 +25,7 @@ import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 public class HistoryActivity extends Activity{
 
@@ -106,7 +108,7 @@ public class HistoryActivity extends Activity{
 		
 		list = dao.queryHistory(locationData.getUserId());
 		
-		if(list!=null){
+		if(list.size()!=0){
 			no_collection.setVisibility(View.GONE);
 			adapter = new MyListAdapter(list,HistoryActivity.this);
 			listView.setAdapter(adapter);
@@ -187,8 +189,28 @@ public class HistoryActivity extends Activity{
 				public void onClick(View v) {
 					// TODO Auto-generated method stub
 					//批量上传
+					List<Integer> selected = new ArrayList<Integer>();
+					int location=0;
+					for(int i=0;i<list.size();i++){
+						if(MyListAdapter.getIsSelected().get(i)){
+							location = i;
+							selected.add(1);
+						}
+					}
 					
-					
+					if(selected.size()==0){
+						Toast.makeText(HistoryActivity.this,"您尚未选中任何点检表！", Toast.LENGTH_SHORT).show();
+					}else if(selected.size()==1){
+						Intent it = new Intent(HistoryActivity.this,UploadActivity.class);
+						it.putExtra("locationData", locationData);
+						it.putExtra("filePath", list.get(location).get("filePath"));
+						it.putExtra("tableName", list.get(location).get("tableName"));
+						it.putExtra("inspectTime", list.get(location).get("inspectTime"));
+						startActivity(it);
+						finish();
+					}else if(selected.size()>1){
+						Toast.makeText(HistoryActivity.this, "暂不支持批量上传功能，请选择一项上传！", Toast.LENGTH_SHORT).show();
+					}
 				}
 			});
 			
@@ -197,7 +219,6 @@ public class HistoryActivity extends Activity{
 			listView.setVisibility(View.GONE);
 			no_collection.setVisibility(View.VISIBLE);
 			tv_topbar_right_map_layout.setClickable(false);
-			tv_topbar_right_map_layout.setBackgroundResource(R.drawable.common_topbar_right_text_bg);
 			tv_topbar_right_edit.setClickable(false);
 			tv_topbar_right_edit.setTextColor(color.gray);
 		}
@@ -229,7 +250,6 @@ public class HistoryActivity extends Activity{
 		if(list.size()==0){
 			no_collection.setVisibility(View.VISIBLE);
 			tv_topbar_right_map_layout.setClickable(false);
-			tv_topbar_right_map_layout.setBackgroundResource(R.drawable.common_topbar_right_text_bg);
 			tv_topbar_right_edit.setClickable(false);
 			tv_topbar_right_edit.setText("编辑");
 			tv_topbar_right_edit.setTextColor(color.gray);

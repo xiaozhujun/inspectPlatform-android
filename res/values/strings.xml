@@ -17,8 +17,14 @@
 	<string name="main_title">功能选择</string>
 	<string name="topbar_right_text">配置</string>
 	
+	<!-- 点检项目界面相关 -->
+	<string name = "project_title">可操作点检项</string>
+	
+	
 	<!-- 任务界面相关 -->
 	<string name="task_title">任务列表</string>
+	<string name="startTime">开始时间：</string>
+	<string name="endTime">截止时间：</string>
 	
 	<!-- 点检界面相关  -->
 	<string name="scanTag">扫描标签</string>
@@ -27,6 +33,7 @@
 	<string name="unknown">未知</string>
 	<string name="comments">添加备注</string>
 	<string name="menu">菜单</string>
+	<string name="addComment">添加备注</string>
 	
 	<!-- 点检历史界面相关 -->
 	<string name="history_title">点检历史</string>

@@ -21,8 +21,6 @@ import org.whut.strings.UrlStrings;
 import org.whut.utils.JsonUtils;
 import org.whut.utils.XmlUtils;
 
-import com.baidu.mapapi.BMapManager;
-import com.baidu.mapapi.MKGeneralListener;
 import com.readystatesoftware.viewbadger.BadgeView;
 
 import android.annotation.SuppressLint;
@@ -30,8 +28,11 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.AlertDialog.Builder;
 import android.app.ProgressDialog;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -52,13 +53,14 @@ import android.widget.Toast;
 
 public class MainActivity extends Activity{
 
-	public static BMapManager mapManager;
 	public static Handler handler ;
 
 	private ProgressDialog dialog;
 
 	private Intent serviceIntent;
 	private Intent locationIntent;
+	
+	private MyBroadcastReciever reciever;
 
 	private static UserServiceDao userDao;
 	private static TaskServiceDao taskDao;
@@ -66,6 +68,7 @@ public class MainActivity extends Activity{
 
 	private static int userId;
 	private String userName;
+	private String image;
 
 	private static Location locationData;
 	private static List<Task> taskData;
@@ -88,10 +91,7 @@ public class MainActivity extends Activity{
 
 	int[] images = {R.drawable.img_project,R.drawable.img_task,R.drawable.img_history};
 	String[] functions ={"点检项目","待做任务","点检记录"};
-
-
-
-
+	
 
 	/** 
 	 * 菜单、返回键响应 
@@ -132,35 +132,15 @@ public class MainActivity extends Activity{
 	protected void onCreate(Bundle savedInstanceState) {
 		// TODO Auto-generated method stub
 		super.onCreate(savedInstanceState);
-
 		MyApplication.getInstance().addActivity(this);
-
-		mapManager = new BMapManager(getApplication());
-		mapManager.init(new MKGeneralListener() {
-
-			@Override
-			public void onGetPermissionState(int arg0) {
-
-				Toast.makeText(getApplicationContext(),
-						"密钥错误", Toast.LENGTH_SHORT).show();
-			}
-
-			@Override
-			public void onGetNetworkState(int arg0) {
-
-				Toast.makeText(getApplicationContext(),
-
-						"网络错误", Toast.LENGTH_SHORT).show();
-			}
-		});
-
-		MyApplication.getInstance().addActivity(MainActivity.this);
-
 		setContentView(R.layout.activity_main);
 
 		serviceIntent = new Intent(MainActivity.this,InitDataService.class);
+	
 		locationIntent = new Intent(MainActivity.this,LocationService.class);
+		locationIntent.putExtra("activity", "org.whut.platform.MainActivity");
 
+		//zhaowei
 		userName = getIntent().getExtras().getString("userName");
 
 		userDao = new UserServiceDao(this);
@@ -188,13 +168,29 @@ public class MainActivity extends Activity{
 						// TODO Auto-generated method stub
 						switch(which){
 						case 0:
-							CasClient.getInstance().reset();
-							final Intent it = getPackageManager().getLaunchIntentForPackage(getPackageName());
-							it.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-							startActivity(it);
+							Builder alertDialog_switch = new AlertDialog.Builder(MainActivity.this);
+							alertDialog_switch.setTitle("提示").setMessage("是否切换账户？").setPositiveButton("确定", new DialogInterface.OnClickListener() {
+								
+								@Override
+								public void onClick(DialogInterface dialog, int which) {
+									// TODO Auto-generated method stub
+									CasClient.getInstance().reset();
+									final Intent it = getPackageManager().getLaunchIntentForPackage(getPackageName());
+									it.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+									startActivity(it);
+								}
+							}).setNegativeButton("取消", null).show();
 							break;
 						case 1:
-							MyApplication.getInstance().exit();
+							Builder alertDialog_exit = new AlertDialog.Builder(MainActivity.this);
+							alertDialog_exit.setTitle("提示").setMessage("是否退出？").setPositiveButton("确定", new DialogInterface.OnClickListener() {
+								
+								@Override
+								public void onClick(DialogInterface dialog, int which) {
+									// TODO Auto-generated method stub
+									MyApplication.getInstance().exit();
+								}
+							}).setNegativeButton("取消", null).show();
 							break;
 						}
 					}
@@ -221,42 +217,36 @@ public class MainActivity extends Activity{
 				case 1://获取到登录的User信息，取得用户的Id，存入本地SQLite中保存
 					HashMap<String,Object> params = (HashMap<String, Object>) msg.obj;
 					userId = (Integer) params.get("id");
+					image = (String)params.get("image");
 					//xml中的workernumber
 					locationData.setUserId(userId);
 					//xml中的worker
-					locationData.setUserName((String)params.get("name"));
+					locationData.setUserName((String) params.get("userName"));
+					locationData.setImage(image);
 					if(!userDao.findUserById(userId)){
 						userDao.addUser(params);
 					}
 					break;
 				case 2://所有配置文件下载完成,再开启定位服务
+					//停止数据初始化服务
+					stopService(serviceIntent);
+					//开始定位服务
 					startService(locationIntent);
 					break;
-				case 3:
-					locationData.setLat(((String)(msg.obj)).split(";")[0]);
-					Log.i("msg", msg.obj.toString());
-					locationData.setLng(((String)(msg.obj)).split(";")[1]);
-					break;
-				case 4:
-					Toast.makeText(getApplicationContext(), "暂时无法获取地理位置信息！", Toast.LENGTH_SHORT).show();
-					break;
-				case 5:
-					locationData.setAddress(msg.obj.toString().split(";")[0]);
-					city_info = msg.obj.toString().split(";")[1];
+				case 3://定位数据获取完毕，发送到服务器端
 					city.setText(city_info);
 					new Thread(new SendLocationThread()).start();
 					break;
-				case 6:
-					//发送位置信息成功
-					new Thread(new HandleProjectThread()).start();
-					stopService(serviceIntent);
+				case 4://发送位置信息成功
 					stopService(locationIntent);
+					new Thread(new HandleProjectThread()).start();
+					//停止定位服务
 					break;
-				case 7://解析点检项完成
+				case 5://解析点检项完成
 					project_list = (List<String>) msg.obj;
 					new Thread(new HandleTaskThread()).start();
 					break;
-				case 8:
+				case 6:
 					List<Task> task_data = new ArrayList<Task>();
 					task_data =  (List<Task>) msg.obj;
 					for(int i=0;i<task_data.size();i++){
@@ -271,8 +261,7 @@ public class MainActivity extends Activity{
 					}
 					new Thread(new HandleHistoryThread()).start();
 					break;
-
-				case 9:
+				case 7:
 					gridView.setAdapter(getGridAdapter(functions,images));
 					gridView.setOnItemClickListener(new OnItemClickListener() {
 						@Override
@@ -284,10 +273,10 @@ public class MainActivity extends Activity{
 								if(projectNum==0){
 									Toast.makeText(MainActivity.this, "暂无可点检项，请确认！", Toast.LENGTH_SHORT).show();
 								}else{
-									Intent it = new Intent(MainActivity.this,InspectActivity.class);
+									Intent it = new Intent(MainActivity.this,ProjectActivity.class);
 									Bundle bundle = new Bundle();
 									bundle.putSerializable("locationData", locationData);
-									bundle.putString("tableName", project_list.get(0));
+									bundle.putStringArrayList("project_list", (ArrayList<String>) project_list);
 									it.putExtras(bundle);
 									startActivity(it);
 								}
@@ -314,16 +303,47 @@ public class MainActivity extends Activity{
 		};
 
 		if(userDao.findUserByUserName(userName)==0){
+			//未添加的用户，则开启线程获取用户信息
 			new Thread(new GetCurrentUserThread()).start();
 		}else{
+			//已添加的用户，则从本地数据库中取数据
+			//通过登录界面传来的用户名：zhaowei，查找数据
 			userId = userDao.findUserByUserName(userName);
 			locationData.setUserId(userId);
-			locationData.setUserName(userName);
+			//点检人员姓名，非用户名
+			String name = userDao.findNameByUserName(userName);
+			locationData.setUserName(name);
+			image = userDao.findImageByUserName(userName);
+			locationData.setImage(image);
 		}
 
+		//开始数据初始化服务
 		startService(serviceIntent);
 
 	}
+
+	
+	
+	@Override
+	protected void onDestroy() {
+		// TODO Auto-generated method stub
+		stopService(locationIntent);
+		stopService(serviceIntent);
+		super.onDestroy();
+	}
+
+
+	@Override
+	protected void onResume() {
+		// TODO Auto-generated method stub
+		//注册广播接受者
+		reciever = new MyBroadcastReciever();
+		IntentFilter filter = new IntentFilter();
+		filter.addAction("org.whut.platform.MainActivity");
+		registerReceiver(reciever, filter);
+		super.onResume();
+	}
+
 
 	private ListAdapter getGridAdapter(String[] functions, int[] images) {
 		ArrayList<HashMap<String, Object>> data = new ArrayList<HashMap<String, Object>>();
@@ -373,7 +393,7 @@ public class MainActivity extends Activity{
 		dialog = new ProgressDialog(MainActivity.this);
 		dialog.setTitle("提示");
 		dialog.setMessage("正在准备数据，请稍后...");
-		dialog.setCancelable(false);
+		dialog.setCancelable(true);
 		dialog.setIndeterminate(false);
 		dialog.show();
 	}
@@ -385,6 +405,7 @@ public class MainActivity extends Activity{
 		public void run() {
 			// TODO Auto-generated method stub
 			String message = CasClient.getInstance().doGet(UrlStrings.GET_CURRENT_USER);
+			Log.i("msg", message);
 			Message msg = Message.obtain();
 			try {
 				msg.obj = JsonUtils.GetUserData(message);
@@ -419,7 +440,7 @@ public class MainActivity extends Activity{
 			Message msg = Message.obtain();
 			try {
 				if(JsonUtils.Validate(message)){
-					msg.what=6;
+					msg.what=4;
 					handler.sendMessage(msg);
 				}
 			} catch (Exception e) {
@@ -444,7 +465,7 @@ public class MainActivity extends Activity{
 			}
 			projectNum = list.size();
 			Message msg = Message.obtain();
-			msg.what = 7;
+			msg.what = 5;
 			msg.obj = list;
 			handler.sendMessage(msg);
 
@@ -468,7 +489,7 @@ public class MainActivity extends Activity{
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-			msg.what = 8;
+			msg.what = 6;
 			taskNum = taskData.size();
 			handler.sendMessage(msg);
 		}	
@@ -482,9 +503,29 @@ public class MainActivity extends Activity{
 			// TODO Auto-generated method stub
 			hisNum = hisDao.findHistory(userId);
 			Message msg = Message.obtain();
-			msg.what = 9;
+			msg.what = 7;
 			handler.sendMessage(msg);
 		}
+	}
+	
+	class MyBroadcastReciever extends BroadcastReceiver{
 
+		@Override
+		public void onReceive(Context context, Intent intent) {
+			// TODO Auto-generated method stub
+			//获取定位数据（lat lng address,存入locationData中
+			Log.i("Debug", "MainActivity--------onReceive");
+			
+			Location location = (Location) intent.getSerializableExtra("locationData");
+			locationData.setAddress(location.getAddress());
+			locationData.setLat(location.getLat());
+			locationData.setLng(location.getLng());
+			//获取城市
+			city_info = intent.getStringExtra("city");
+			//通知主线程获取完毕
+			Message msg = Message.obtain();
+			msg.what = 3;
+			handler.sendMessage(msg);
+		}	
 	}
 }

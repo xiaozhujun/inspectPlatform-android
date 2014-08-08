@@ -12,6 +12,7 @@ import android.app.AlertDialog;
 
 import org.whut.adapter.MyExpandableListAdapter;
 import org.whut.application.MyApplication;
+import org.whut.client.CasClient;
 import org.whut.database.entity.History;
 import org.whut.database.entity.Task;
 import org.whut.database.entity.service.impl.HistoryServiceDao;
@@ -20,9 +21,12 @@ import org.whut.entity.Listable;
 import org.whut.entity.Location;
 import org.whut.entity.Tag;
 import org.whut.inspectplatform.R;
+import org.whut.service.LocationService;
 import org.whut.service.RFIDService;
 import org.whut.strings.FileStrings;
+import org.whut.strings.UrlStrings;
 import org.whut.utils.FileUtils;
+import org.whut.utils.JsonUtils;
 import org.whut.utils.XmlUtils;
 
 import android.annotation.SuppressLint;
@@ -65,6 +69,7 @@ public class InspectActivity extends Activity implements ExpandableListView.OnGr
 
 	private List<Boolean> isInspected;
 
+	
 	//提示框
 	private ProgressDialog dialog;
 	private Timer timerDialog;
@@ -93,13 +98,13 @@ public class InspectActivity extends Activity implements ExpandableListView.OnGr
 	private List<Task> taskData;
 	private Task task;
 	private String tableName;
-	
+
 	private String inspectTime;
 	private String deviceNum;
-	
+
 	private String fileDir;
 	private String filePath;
-	
+
 	private HistoryServiceDao dao;
 
 	//菜单相关
@@ -114,6 +119,20 @@ public class InspectActivity extends Activity implements ExpandableListView.OnGr
 	String[] menu_name_array = {"保存结果", "重置数据", "帮助", "退出" };
 
 
+	private void startLocation(){
+		Intent locationIntent  = new Intent(InspectActivity.this,LocationService.class);
+		locationIntent.putExtra("activity", "org.whut.platform.InspectActivity");
+		startService(locationIntent);
+	}
+	
+	private void stopLocation(){
+		Intent locationIntent = new Intent(InspectActivity.this,LocationService.class);
+		locationIntent.putExtra("activity", "org.whut.platform.InspectActivity");
+		stopService(locationIntent);
+	}
+	
+	
+	
 	@SuppressLint("HandlerLeak")
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -122,10 +141,16 @@ public class InspectActivity extends Activity implements ExpandableListView.OnGr
 		setContentView(R.layout.activity_inspect);
 
 		MyApplication.getInstance().addActivity(this);
-		
+
 		FileUtils.setInspectDir(FileStrings.inspectDir);
 
+		//开始定位
+		startLocation();
+		
 		initData();
+
+		//发送位置信息
+		new Thread(new SendLocationBeforeInspectThread()).start();
 
 		//初始化菜单
 
@@ -149,14 +174,14 @@ public class InspectActivity extends Activity implements ExpandableListView.OnGr
 				case 0://保存
 					//此方法将点检结果保存在相应的点检表中，并返回点检表名
 					try {
-						XmlUtils.saveInspectResult(result, filePath);
+						XmlUtils.saveInspectResult(adapter.getCommentList(),result, filePath);
 					} catch (Exception e) {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
 					}
 					menuDialog.dismiss();
 					Toast.makeText(InspectActivity.this, "点检结果已保存在<"+filePath+">中", Toast.LENGTH_SHORT).show();
-
+					//开始更新定位数据
 					History history = new History();
 					history.setFilePath(filePath);
 					history.setUserId(locationData.getUserId());
@@ -165,20 +190,15 @@ public class InspectActivity extends Activity implements ExpandableListView.OnGr
 					history.setUploadFlag(0);
 					history.setInspectTime(inspectTime);
 					dao.addHistory(history);
-					
 					//若为日常任务，则更新数据库localStatus为1（已完成）
 					if(taskData!=null){
 						TaskServiceDao dao = new TaskServiceDao(InspectActivity.this);
 						dao.updateLocalStatus(task.getId());
 					}
-					Intent it = new Intent(InspectActivity.this,UploadActivity.class);
-					it.putExtra("locationData", locationData);
-					it.putExtra("filePath", filePath);
-					it.putExtra("tableName", tableName);
-					it.putExtra("inspectTime", inspectTime);
+					//更新主界面历史数据
 					new Thread(new MainActivity.HandleHistoryThread()).start();
-					startActivity(it);
-					finish();
+					//点检完毕，发送位置信息
+					new Thread(new SendLocationAfterInspectThread()).start();
 					break;
 				case 1://重置数据
 					menuDialog.dismiss();
@@ -193,7 +213,7 @@ public class InspectActivity extends Activity implements ExpandableListView.OnGr
 							adapter =  new MyExpandableListAdapter(InspectActivity.this, groupList, childList, bg_color);
 							listView.setAdapter(adapter);
 							try {
-								XmlUtils.saveInspectResult(result, filePath);
+								XmlUtils.saveInspectResult(adapter.getCommentList(),result, filePath);
 							} catch (Exception e) {
 								// TODO Auto-generated catch block
 								e.printStackTrace();
@@ -250,6 +270,20 @@ public class InspectActivity extends Activity implements ExpandableListView.OnGr
 					it.setAction("org.whut.service.RFIDService");
 					it.putExtra("stopflag", true);
 					sendBroadcast(it);
+					break;
+				case 1://发送位置信息成功
+					Toast.makeText(InspectActivity.this, "服务器端已同步点检信息，请扫卡开启点检！", Toast.LENGTH_SHORT).show();
+					break;
+				case 2:
+					break;
+				case 3:
+					Intent it2 = new Intent(InspectActivity.this,UploadActivity.class);
+					it2.putExtra("locationData", locationData);
+					it2.putExtra("filePath", filePath);
+					it2.putExtra("tableName", tableName);
+					it2.putExtra("inspectTime", inspectTime);
+					startActivity(it2);
+					finish();
 					break;
 				}
 			}
@@ -369,18 +403,20 @@ public class InspectActivity extends Activity implements ExpandableListView.OnGr
 			dao = new HistoryServiceDao(InspectActivity.this);
 
 			locationData = (Location) getIntent().getExtras().getSerializable("locationData");
-			
+
 			if(getIntent().getExtras().getSerializable("taskData")!=null){
 				taskData = (List<Task>) getIntent().getExtras().getSerializable("taskData");
 				task = (Task) getIntent().getExtras().getSerializable("task");
 			}
-			
+
 			tableName = getIntent().getExtras().getString("tableName");
 
+			locationData.setInspectTableName(tableName);
+			
 			fileDir = FileStrings.BASE_PATH;
 
 			filePath = getFilePath(tableName);
-			
+
 			inspectTime = createFormatTime(filePath);
 
 			//创建本次点检文件
@@ -429,7 +465,6 @@ public class InspectActivity extends Activity implements ExpandableListView.OnGr
 				// TODO Auto-generated method stub
 				//记录点检结果
 				result.get(groupPosition).set(childPosition, which);
-				Log.i("result", "groupPosition="+groupPosition+",childPosition="+childPosition+",which="+which+","+result.get(groupPosition).toString());
 			}
 		}).setNegativeButton("确定", new DialogInterface.OnClickListener() {
 
@@ -439,13 +474,13 @@ public class InspectActivity extends Activity implements ExpandableListView.OnGr
 				//记录点检结果
 				switch (result.get(groupPosition).get(childPosition)) {
 				case 0:
-					bg_color.get(groupPosition).set(childPosition, Color.GREEN);
+					bg_color.get(groupPosition).set(childPosition, Color.parseColor("#E0FFFF"));
 					break;
 				case 1:
-					bg_color.get(groupPosition).set(childPosition, Color.RED);
+					bg_color.get(groupPosition).set(childPosition, Color.parseColor("#FFE4E1"));
 					break;
 				case 2:
-					bg_color.get(groupPosition).set(childPosition, Color.YELLOW);
+					bg_color.get(groupPosition).set(childPosition, Color.parseColor("#FFF8DC"));
 					break;
 				}
 				adapter.setBg_color(bg_color);
@@ -460,7 +495,6 @@ public class InspectActivity extends Activity implements ExpandableListView.OnGr
 	public boolean onGroupClick(ExpandableListView parent, View v,
 			int groupPosition, long id) {
 		// TODO Auto-generated method stub
-
 		return false;
 	}
 
@@ -473,6 +507,10 @@ public class InspectActivity extends Activity implements ExpandableListView.OnGr
 		stopService.setAction("org.whut.service.RFIDService");
 		stopService.putExtra("stopflag", true);
 		sendBroadcast(stopService);
+
+		Intent locationIntent = new Intent();
+		locationIntent.putExtra("activity", "org.whut.platform.InspectActivity");
+		stopService(locationIntent);
 		super.onDestroy();
 	}
 
@@ -518,7 +556,7 @@ public class InspectActivity extends Activity implements ExpandableListView.OnGr
 			List<Integer> list = new ArrayList<Integer>();
 			List<Integer> list2 = new ArrayList<Integer>();
 			for(int j=0;j<childList.get(i).size();j++){
-				list.add(Color.GREEN);
+				list.add(Color.parseColor("#E0FFFF"));
 				list2.add(0);
 			}
 			bg_color.add(list);
@@ -556,10 +594,10 @@ public class InspectActivity extends Activity implements ExpandableListView.OnGr
 			}
 		}).show();
 	}
-	
+
 	private String createFormatTime(String filePath){
 		String inspectTime = filePath.split("-")[2].substring(0,14);
-			
+
 		String formatTime = inspectTime.substring(0,4)+"-"
 				+inspectTime.substring(4,6)+"-"
 				+inspectTime.substring(6,8)+" "
@@ -571,6 +609,97 @@ public class InspectActivity extends Activity implements ExpandableListView.OnGr
 	}
 
 
+	class SendLocationBeforeInspectThread implements Runnable{
+
+		@Override
+		public void run() {
+			// TODO Auto-generated method stub
+			HashMap<String,Object> params = new HashMap<String,Object>();
+			params.put("lng", locationData.getLng());
+			params.put("address", locationData.getAddress());
+			params.put("userId", locationData.getUserId());
+			params.put("lat", locationData.getLat());
+			params.put("image", locationData.getImage());
+			params.put("userName",locationData.getUserName());
+			params.put("inspectTableName", locationData.getInspectTableName());
+			HashMap<String,Object> map = new HashMap<String,Object>();
+			map.put("jsonString",JsonUtils.HashToJson(params));
+			Log.i("msg", JsonUtils.HashToJson(params));
+			String message = CasClient.getInstance().doPost(UrlStrings.SEND_LOCATION,map);
+			Message msg = Message.obtain();
+			try {
+				if(JsonUtils.Validate(message)){
+					msg.what=1;
+					handler.sendMessage(msg);
+				}
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+	}
+	
+	class SendLocationWhileInspectThread implements Runnable{
+
+		@Override
+		public void run() {
+			// TODO Auto-generated method stub
+			HashMap<String,Object> params = new HashMap<String,Object>();
+			params.put("lng", locationData.getLng());
+			params.put("address", locationData.getAddress());
+			params.put("userId", locationData.getUserId());
+			params.put("lat", locationData.getLat());
+			params.put("userName",locationData.getUserName());
+			//加入扫卡之后的deviceNum
+			params.put("deviceNum", deviceNum);
+			params.put("inspectTableName", locationData.getInspectTableName());
+			HashMap<String,Object> map = new HashMap<String,Object>();
+			map.put("jsonString",JsonUtils.HashToJson(params));
+			Log.i("msg", JsonUtils.HashToJson(params));
+			String message = CasClient.getInstance().doPost(UrlStrings.SEND_LOCATION,map);
+			Message msg = Message.obtain();
+			try {
+				if(JsonUtils.Validate(message)){
+					msg.what=2;
+					handler.sendMessage(msg);
+				}
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+		
+	}
+
+	class SendLocationAfterInspectThread implements Runnable{
+
+		@Override
+		public void run() {
+			// TODO Auto-generated method stub
+			HashMap<String,Object> params = new HashMap<String,Object>();
+			params.put("lng", locationData.getLng());
+			params.put("address", locationData.getAddress());
+			params.put("userId", locationData.getUserId());
+			params.put("lat", locationData.getLat());
+			HashMap<String,Object> map = new HashMap<String,Object>();
+			map.put("jsonString",JsonUtils.HashToJson(params));
+			Log.i("msg", JsonUtils.HashToJson(params));
+			String message = CasClient.getInstance().doPost(UrlStrings.SEND_LOCATION,map);
+			Message msg = Message.obtain();
+			try {
+				if(JsonUtils.Validate(message)){
+					msg.what=3;
+					handler.sendMessage(msg);
+				}
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+
+	}
+
+
 
 
 
@@ -579,51 +708,60 @@ public class InspectActivity extends Activity implements ExpandableListView.OnGr
 		@Override
 		public void onReceive(Context context, Intent intent) {
 			// TODO Auto-generated method stub
-			Listable listable = intent.getParcelableExtra("listable");
-			//扫描出的数据为空
-			if(listable==null){
-				Toast.makeText(InspectActivity.this, "读取标签卡数据为空，请重试！", Toast.LENGTH_SHORT).show();
-				timerDialog.cancel();
-				dialog.cancel();
+			Log.i("Debug", "InspectActivity-------onReceive");
+			if(intent.getBooleanExtra("locationService",false)){
+				Location location = (Location) intent.getSerializableExtra("locationData");
+				//更新locationData数据
+				Log.i("MyLocation", "正在更新Location数据：---->lat = "+location.getLat()+";"+"--->lng="+location.getLng());
+				locationData.setAddress(location.getAddress());
+				locationData.setLat(location.getLat());
+				locationData.setLng(location.getLng());
+				stopLocation();
 				return;
-			}else if(!(listable instanceof Tag)){ //读出来的数据为非设备数据
-				Toast.makeText(InspectActivity.this, "标签类型错误，请读设备标签卡！", Toast.LENGTH_SHORT).show();
-				timerDialog.cancel();
-				dialog.cancel();
-				return;
-			}
-
-			Tag tagData = (Tag) listable;
-
-
-			String location = tagData.getTagArea();
-			deviceNum = tagData.getDeviceNum();
-			
-
-
-			Log.i("msg", " -------扫描区域---->"+location);
-			Log.i("msg", "-------------->DeviceNum="+deviceNum);
-			
-			//判断扫描出来的数据属于哪个区域，展开对应点检项
-			for(int i=0;i<groupList.size();i++){
-				if(groupList.get(i).equals(location)){
-					isInspected.set(i, true);
-					listView.expandGroup(i);
-					//将deviceNum加入点检表
-					try {
-						XmlUtils.updateInspectTable(filePath,deviceNum);
-					} catch (Exception e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
-					Toast.makeText(InspectActivity.this, "扫卡完成，可以开始点检...", Toast.LENGTH_SHORT).show();
+			}else{
+				Listable listable = intent.getParcelableExtra("listable");
+				//扫描出的数据为空
+				if(listable==null){
+					Toast.makeText(InspectActivity.this, "读取标签卡数据为空，请重试！", Toast.LENGTH_SHORT).show();
+					timerDialog.cancel();
+					dialog.cancel();
+					return;
+				}else if(!(listable instanceof Tag)){ //读出来的数据为非设备数据
+					Toast.makeText(InspectActivity.this, "标签类型错误，请读设备标签卡！", Toast.LENGTH_SHORT).show();
 					timerDialog.cancel();
 					dialog.cancel();
 					return;
 				}
+
+				Tag tagData = (Tag) listable;
+
+				String area = tagData.getTagArea();
+				deviceNum = tagData.getDeviceNum();
+				
+
+				Log.i("msg", " -------扫描区域---->"+area);
+				Log.i("msg", "-------------->DeviceNum="+deviceNum);
+
+				//判断扫描出来的数据属于哪个区域，展开对应点检项
+				for(int i=0;i<groupList.size();i++){
+					if(groupList.get(i).equals(area)){
+						isInspected.set(i, true);
+						listView.expandGroup(i);
+						//将deviceNum加入点检表
+						try {
+							XmlUtils.updateInspectTable(filePath,deviceNum);
+						} catch (Exception e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+						Toast.makeText(InspectActivity.this, "扫卡完成，可以开始点检...", Toast.LENGTH_SHORT).show();
+						timerDialog.cancel();
+						dialog.cancel();
+						new Thread(new SendLocationWhileInspectThread()).start();
+						return;
+					}
+				}
 			}
-
-
 
 		}
 
