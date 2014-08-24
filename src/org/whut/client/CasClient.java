@@ -5,6 +5,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -29,8 +30,10 @@ import org.apache.http.params.CoreProtocolPNames;
 import org.apache.http.params.HttpConnectionParams;
 import org.apache.http.protocol.HTTP;
 import org.apache.http.util.EntityUtils;
+import org.apache.http.entity.mime.HttpMultipartMode;
 import org.apache.http.entity.mime.MultipartEntity;
 import org.apache.http.entity.mime.content.FileBody;
+import org.apache.http.entity.mime.content.StringBody;
 import org.whut.platform.UploadActivity;
 import org.whut.utils.CustomMultiPartEntity;
 import org.whut.utils.CustomMultiPartEntity.ProgressListener;
@@ -61,6 +64,7 @@ public class CasClient
 		HttpConnectionParams.setConnectionTimeout(httpParams, REQUEST_TIMEOUT);
 		HttpConnectionParams.setSoTimeout(httpParams, SO_TIMEOUT);
 		DefaultHttpClient client = new DefaultHttpClient(httpParams);
+		client.getParams().setParameter(CoreProtocolPNames.HTTP_CONTENT_CHARSET,"UTF-8");
 		return client;
 	}
 
@@ -237,7 +241,7 @@ public class CasClient
 				CoreProtocolPNames.PROTOCOL_VERSION, HttpVersion.HTTP_1_1);  
 		HttpPost httppost = new HttpPost(ServicePath);  
 		File file = new File(FilePath);
-		CustomMultiPartEntity entity = new CustomMultiPartEntity(new ProgressListener() {
+		CustomMultiPartEntity entity = new CustomMultiPartEntity(HttpMultipartMode.BROWSER_COMPATIBLE,null,Charset.forName("UTF-8"),new ProgressListener() {
 			
 			@Override
 			public void transferred(long num) {
@@ -247,6 +251,8 @@ public class CasClient
 				UploadActivity.handler.sendMessage(msg);
 			}
 		});  
+		
+		
 		FileBody fileBody = new FileBody(file);  
 		entity.addPart("filename", fileBody);  
 		Filelength=entity.getContentLength();
@@ -262,7 +268,9 @@ synchronized public String doSendFile(String ServicePath,String FilePath) throws
 				CoreProtocolPNames.PROTOCOL_VERSION, HttpVersion.HTTP_1_1);  
 		HttpPost httppost = new HttpPost(ServicePath);  
 		File file = new File(FilePath);
-		MultipartEntity entity = new MultipartEntity();  
+		MultipartEntity entity = new MultipartEntity(HttpMultipartMode.BROWSER_COMPATIBLE,
+	               null, Charset.forName("UTF-8")); 
+		
 		FileBody fileBody = new FileBody(file);  
 		entity.addPart("filename", fileBody);  
 		httppost.setEntity(entity);  
@@ -270,6 +278,43 @@ synchronized public String doSendFile(String ServicePath,String FilePath) throws
 		HttpEntity resEntity = response.getEntity();  
 		return EntityUtils.toString(resEntity);
 	}
+
+/***
+ * 
+ * @param service
+ * @param filePath
+ * @param params
+ * @return
+ * @throws ClientProtocolException
+ * @throws IOException
+ */
+
+	synchronized public String uploadImage(String service,String filePath,HashMap<String,String> params)throws ClientProtocolException, IOException{
+		httpClient.getParams().setParameter(  
+				CoreProtocolPNames.PROTOCOL_VERSION, HttpVersion.HTTP_1_1); 
+		HttpPost httppost = new HttpPost(service);
+		File file = new File(filePath);
+		MultipartEntity entity = new MultipartEntity(HttpMultipartMode.BROWSER_COMPATIBLE,
+	               null, Charset.forName("UTF-8"));
+		FileBody imageBody = new FileBody(file);
+		entity.addPart("filename",imageBody);
+		
+		StringBody itemId = new StringBody(params.get("itemId"));
+		StringBody tableRecordId = new StringBody(params.get("tableRecordId"));
+		StringBody itemRecordId = new StringBody(params.get("itemRecordId"));
+		
+		entity.addPart("itemId",itemId);
+		entity.addPart("tableRecordId",tableRecordId);
+		entity.addPart("itemRecordId",itemRecordId);
+	
+		httppost.setEntity(entity);  
+		HttpResponse response = httpClient.execute(httppost);
+		HttpEntity resEntity = response.getEntity();  
+		return EntityUtils.toString(resEntity);
+	}
+
+
+
 
 	public String doGet(String service){
 		Log.i("cas client doGet url:", service);

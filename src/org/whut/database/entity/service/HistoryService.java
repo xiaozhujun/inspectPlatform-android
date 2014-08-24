@@ -12,4 +12,5 @@ public interface HistoryService {
 	public List<Map<String,String>> queryHistory(int userId);
 	public void deleteHistory(String filePath);
 	public void updateUploadFlag(String filePath);
+	public int isUploaded(String filePath);
 }

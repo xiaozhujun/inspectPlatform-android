@@ -4,11 +4,14 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.whut.database.entity.Task;
+
+import android.util.Log;
 
 public class JsonUtils {
 
@@ -148,4 +151,32 @@ public class JsonUtils {
 		}
 		return false;
 	}
+
+
+	public static int getInfo(String message) throws Exception{
+		// TODO Auto-generated method stub
+		JSONObject jsonObject = new JSONObject(message);
+		Log.i("msg", jsonObject.getString("code"));
+		return Integer.parseInt(jsonObject.getString("code"));
+	}
+
+
+
+
+	public static List<Map<String, String>> getReturnInfo(String message) throws Exception{
+		// TODO Auto-generated method stub
+		List<Map<String,String>> list = new ArrayList<Map<String,String>>();
+		JSONObject jsonObject = new JSONObject(message);
+		JSONArray jsonArray = jsonObject.getJSONArray("data");
+		for(int i=0;i<jsonArray.length();i++){
+			Map<String,String> map = new HashMap<String, String>();
+			map.put("itemId", jsonArray.getJSONObject(i).getString("itemId"));
+			map.put("tableRecordId", jsonArray.getJSONObject(i).getString("tableRecordId"));
+			map.put("itemRecordId", jsonArray.getJSONObject(i).getString("itemRecordId"));
+			list.add(map);
+		}
+		return list;
+	}
+	
+	
 }

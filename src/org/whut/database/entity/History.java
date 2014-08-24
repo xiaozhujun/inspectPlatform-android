@@ -12,7 +12,7 @@ public class History {
 
 	private String filePath;
 	//点检表名称
-	private String tableName;
+	private String inspectTableName;
 	
 	private String deviceName;
 	
@@ -67,13 +67,6 @@ public class History {
 		this.userName = userName;
 	}
 
-	public String getTableName() {
-		return tableName;
-	}
-
-	public void setTableName(String tableName) {
-		this.tableName = tableName;
-	}
 
 	public String getDeviceName() {
 		return deviceName;
@@ -90,6 +83,16 @@ public class History {
 	public void setUploadFlag(int uploadFlag) {
 		this.uploadFlag = uploadFlag;
 	}
+
+	public String getInspectTableName() {
+		return inspectTableName;
+	}
+
+	public void setInspectTableName(String inspectTableName) {
+		this.inspectTableName = inspectTableName;
+	}
+	
+	
 
 	
 }

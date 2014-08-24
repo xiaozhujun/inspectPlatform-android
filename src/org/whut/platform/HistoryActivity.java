@@ -49,10 +49,10 @@ public class HistoryActivity extends Activity{
 	private Button btn_cancel_all;
 	private Button btn_upload;
 	private Button btn_delete;
-	
+
 	private Location locationData;
 
-	
+
 	@Override
 	public void onBackPressed() {
 		// TODO Auto-generated method stub
@@ -67,9 +67,9 @@ public class HistoryActivity extends Activity{
 			HistoryActivity.this.finish();
 		}
 	}
-	
-	
-	
+
+
+
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		// TODO Auto-generated method stub
@@ -89,7 +89,7 @@ public class HistoryActivity extends Activity{
 		btn_upload = (Button) findViewById(R.id.btnUpload);
 		btn_delete = (Button) findViewById(R.id.btnDelAll);
 
-		
+
 		left_back.setOnClickListener(new View.OnClickListener() {
 
 			@Override
@@ -99,20 +99,20 @@ public class HistoryActivity extends Activity{
 				finish();
 			}
 		});
-		
-		
+
+
 		dao = new HistoryServiceDao(HistoryActivity.this);
-		
-		
+
+
 		locationData = (Location) getIntent().getSerializableExtra("locationData");
-		
+
 		list = dao.queryHistory(locationData.getUserId());
-		
+
 		if(list.size()!=0){
 			no_collection.setVisibility(View.GONE);
 			adapter = new MyListAdapter(list,HistoryActivity.this);
 			listView.setAdapter(adapter);
-			
+
 			tv_topbar_right_map_layout.setOnClickListener(new View.OnClickListener() {
 
 				@Override
@@ -135,9 +135,9 @@ public class HistoryActivity extends Activity{
 					}
 				}
 			});
-			
+
 			btn_select_all.setOnClickListener(new View.OnClickListener() {
-				
+
 				@Override
 				public void onClick(View v) {
 					// TODO Auto-generated method stub
@@ -147,10 +147,10 @@ public class HistoryActivity extends Activity{
 					adapter.notifyDataSetChanged();			
 				}
 			});
-			
-			
+
+
 			btn_cancel_all.setOnClickListener(new View.OnClickListener() {
-				
+
 				@Override
 				public void onClick(View v) {
 					// TODO Auto-generated method stub
@@ -160,9 +160,9 @@ public class HistoryActivity extends Activity{
 					adapter.notifyDataSetChanged();
 				}
 			});
-			
+
 			btn_delete.setOnClickListener(new View.OnClickListener() {
-				
+
 				@Override
 				public void onClick(View v) {
 					// TODO Auto-generated method stub
@@ -175,16 +175,16 @@ public class HistoryActivity extends Activity{
 							changeData();
 							adapter.notifyDataSetChanged();
 						}
-						
+
 					}).setNegativeButton("取消",null).show();
-					
-					
+
+
 
 				}
 			});
-			
+
 			btn_upload.setOnClickListener(new View.OnClickListener() {
-				
+
 				@Override
 				public void onClick(View v) {
 					// TODO Auto-generated method stub
@@ -197,24 +197,30 @@ public class HistoryActivity extends Activity{
 							selected.add(1);
 						}
 					}
-					
+
 					if(selected.size()==0){
 						Toast.makeText(HistoryActivity.this,"您尚未选中任何点检表！", Toast.LENGTH_SHORT).show();
 					}else if(selected.size()==1){
-						Intent it = new Intent(HistoryActivity.this,UploadActivity.class);
-						it.putExtra("locationData", locationData);
-						it.putExtra("filePath", list.get(location).get("filePath"));
-						it.putExtra("tableName", list.get(location).get("tableName"));
-						it.putExtra("inspectTime", list.get(location).get("inspectTime"));
-						startActivity(it);
-						finish();
+						if(dao.isUploaded(list.get(location).get("filePath"))==1){
+							Toast.makeText(HistoryActivity.this, "该点检表已上传！请选择其他未上传的点检表！", Toast.LENGTH_SHORT).show();
+						}else if(dao.isUploaded(list.get(location).get("filePath"))==-1){
+							Toast.makeText(HistoryActivity.this, "并无该项点检记录！", Toast.LENGTH_SHORT).show();
+						}else{
+							Intent it = new Intent(HistoryActivity.this,UploadActivity.class);
+							it.putExtra("locationData", locationData);
+							it.putExtra("filePath", list.get(location).get("filePath"));
+							it.putExtra("inspectTableName", list.get(location).get("inspectTableName"));
+							it.putExtra("inspectTime", list.get(location).get("inspectTime"));
+							startActivity(it);
+							finish();
+						}
 					}else if(selected.size()>1){
 						Toast.makeText(HistoryActivity.this, "暂不支持批量上传功能，请选择一项上传！", Toast.LENGTH_SHORT).show();
 					}
 				}
 			});
-			
-			
+
+
 		}else{
 			listView.setVisibility(View.GONE);
 			no_collection.setVisibility(View.VISIBLE);
@@ -223,9 +229,9 @@ public class HistoryActivity extends Activity{
 			tv_topbar_right_edit.setTextColor(color.gray);
 		}
 	}
-	
-	
-	
+
+
+
 	private void changeData(){
 		List<Integer> selectedItem = new ArrayList<Integer>();
 		for(int i=0;i<list.size();i++){
@@ -233,20 +239,20 @@ public class HistoryActivity extends Activity{
 				selectedItem.add(i);
 			}
 		}
-		
+
 		for(int j=0;j<selectedItem.size();j++){
 			//通过filePath来删除
 			String filePath = list.get(j).get("filePath");
 			dao.deleteHistory(filePath);
 			FileUtils.deleteFile(filePath);
 		}
-		
+
 		list = new ArrayList<Map<String,String>>();
 		list = dao.queryHistory(locationData.getUserId());
 		adapter = new MyListAdapter(list, HistoryActivity.this);
 		adapter.setVisibility(View.VISIBLE);
 		listView.setAdapter(adapter);
-		
+
 		if(list.size()==0){
 			no_collection.setVisibility(View.VISIBLE);
 			tv_topbar_right_map_layout.setClickable(false);

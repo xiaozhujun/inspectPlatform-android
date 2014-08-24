@@ -80,7 +80,7 @@ public class MyListAdapter extends BaseAdapter{
 			holder = (ViewHolder) convertView.getTag();
 			
 		}
-		holder.tableName.setText(list.get(position).get("tableName"));
+		holder.tableName.setText(list.get(position).get("inspectTableName").split("-")[0]);
 		Log.i("msg", list.get(position).get("uploadFlag"));
 		switch(Integer.parseInt(list.get(position).get("uploadFlag"))){
 		case 0://未上传

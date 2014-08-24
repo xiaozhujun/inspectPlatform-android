@@ -16,6 +16,7 @@ import org.whut.client.CasClient;
 import org.whut.database.entity.History;
 import org.whut.database.entity.Task;
 import org.whut.database.entity.service.impl.HistoryServiceDao;
+import org.whut.database.entity.service.impl.InspectImageServiceDao;
 import org.whut.database.entity.service.impl.TaskServiceDao;
 import org.whut.entity.Listable;
 import org.whut.entity.Location;
@@ -38,7 +39,6 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -65,6 +65,7 @@ public class InspectActivity extends Activity implements ExpandableListView.OnGr
 	private ExpandableListView listView;
 	private List<String> groupList;
 	private List<List<String>> childList;
+	private List<List<Integer>> itemIds;
 	private MyExpandableListAdapter adapter;
 
 	private List<Boolean> isInspected;
@@ -84,10 +85,6 @@ public class InspectActivity extends Activity implements ExpandableListView.OnGr
 	//BottomView
 	private Button startScan;
 
-	//记录背景颜色
-	private List<List<Integer>> bg_color;
-	//记录点检结果
-	private List<List<Integer>> result;
 
 	//Handler处理消息，更新UI
 	private Handler handler;
@@ -98,6 +95,9 @@ public class InspectActivity extends Activity implements ExpandableListView.OnGr
 	private List<Task> taskData;
 	private Task task;
 	private String tableName;
+	
+	//点检表名字，不带路径的
+	private String inspectTableName;
 
 	private String inspectTime;
 	private String deviceNum;
@@ -106,6 +106,7 @@ public class InspectActivity extends Activity implements ExpandableListView.OnGr
 	private String filePath;
 
 	private HistoryServiceDao dao;
+	private InspectImageServiceDao imageDao;
 
 	//菜单相关
 	private View menuView;
@@ -174,7 +175,7 @@ public class InspectActivity extends Activity implements ExpandableListView.OnGr
 				case 0://保存
 					//此方法将点检结果保存在相应的点检表中，并返回点检表名
 					try {
-						XmlUtils.saveInspectResult(adapter.getCommentList(),result, filePath);
+						XmlUtils.saveInspectResult(adapter.getCommentList(),adapter.getResultList(), filePath);
 					} catch (Exception e) {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
@@ -186,7 +187,7 @@ public class InspectActivity extends Activity implements ExpandableListView.OnGr
 					history.setFilePath(filePath);
 					history.setUserId(locationData.getUserId());
 					history.setUserName(locationData.getUserName());
-					history.setTableName(tableName);
+					history.setInspectTableName(inspectTableName);
 					history.setUploadFlag(0);
 					history.setInspectTime(inspectTime);
 					dao.addHistory(history);
@@ -210,15 +211,17 @@ public class InspectActivity extends Activity implements ExpandableListView.OnGr
 						public void onClick(DialogInterface dialog, int which) {
 							// TODO Auto-generated method stub
 							init();
-							adapter =  new MyExpandableListAdapter(InspectActivity.this, groupList, childList, bg_color);
+							adapter =  new MyExpandableListAdapter(InspectActivity.this, groupList, childList,itemIds,inspectTableName);
 							listView.setAdapter(adapter);
+							//处理图片
+							deleteImages();
 							try {
-								XmlUtils.saveInspectResult(adapter.getCommentList(),result, filePath);
+								XmlUtils.saveInspectResult(adapter.getCommentList(),adapter.getResultList(), filePath);
 							} catch (Exception e) {
 								// TODO Auto-generated catch block
 								e.printStackTrace();
 							}
-							Toast.makeText(InspectActivity.this, "点检结果已重置，请重新输入点检结果！", Toast.LENGTH_SHORT).show();
+							Toast.makeText(InspectActivity.this, "点检结果已重置，请重新开始点检！", Toast.LENGTH_SHORT).show();
 						}
 					}).show();
 
@@ -237,6 +240,8 @@ public class InspectActivity extends Activity implements ExpandableListView.OnGr
 						@Override
 						public void onClick(DialogInterface dialog, int which) {
 							// TODO Auto-generated method stub
+							//处理图片
+							deleteImages();
 							FileUtils.deleteFile(filePath);
 							if(taskData!=null){
 								Intent it = new Intent(InspectActivity.this,TaskActivity.class);
@@ -282,6 +287,8 @@ public class InspectActivity extends Activity implements ExpandableListView.OnGr
 					it2.putExtra("filePath", filePath);
 					it2.putExtra("tableName", tableName);
 					it2.putExtra("inspectTime", inspectTime);
+					it2.putExtra("inspectTableName", inspectTableName);
+					Log.i("tableName", inspectTableName+"----------InspectActivity跳转至UploadActivity");
 					startActivity(it2);
 					finish();
 					break;
@@ -289,7 +296,7 @@ public class InspectActivity extends Activity implements ExpandableListView.OnGr
 			}
 		};
 
-		adapter = new MyExpandableListAdapter(InspectActivity.this, groupList, childList,bg_color);
+		adapter = new MyExpandableListAdapter(InspectActivity.this, groupList, childList,itemIds,inspectTableName);
 		listView.setAdapter(adapter);
 		listView.setOnGroupExpandListener(new OnGroupExpandListener() {
 
@@ -309,9 +316,6 @@ public class InspectActivity extends Activity implements ExpandableListView.OnGr
 			}
 		});
 
-		listView.setOnChildClickListener(this);
-
-
 		topbar_btn_back.setOnClickListener(new View.OnClickListener() {
 
 			@Override
@@ -324,6 +328,7 @@ public class InspectActivity extends Activity implements ExpandableListView.OnGr
 					@Override
 					public void onClick(DialogInterface dialog, int which) {
 						// TODO Auto-generated method stub
+						deleteImages();
 						FileUtils.deleteFile(filePath);
 						if(taskData!=null){
 							Intent it = new Intent(InspectActivity.this,TaskActivity.class);
@@ -402,6 +407,8 @@ public class InspectActivity extends Activity implements ExpandableListView.OnGr
 
 			dao = new HistoryServiceDao(InspectActivity.this);
 
+			imageDao = new InspectImageServiceDao(InspectActivity.this);
+			
 			locationData = (Location) getIntent().getExtras().getSerializable("locationData");
 
 			if(getIntent().getExtras().getSerializable("taskData")!=null){
@@ -425,7 +432,8 @@ public class InspectActivity extends Activity implements ExpandableListView.OnGr
 			//初始化数据
 			groupList = XmlUtils.getInspectLocation(filePath);
 			childList = XmlUtils.getInspectField(filePath);
-
+			itemIds = XmlUtils.getInspectItemId(filePath);
+			
 			init();
 
 
@@ -443,6 +451,9 @@ public class InspectActivity extends Activity implements ExpandableListView.OnGr
 		String fileFullName = null;
 		SimpleDateFormat format = new SimpleDateFormat("yyyyMMddHHmmss");
 		String newFileName = tableName+"-"+locationData.getUserName().trim()+"-"+format.format(new Date())+".xml";
+		//该点检表的名字，非路径
+		inspectTableName = newFileName;
+		Log.i("tableName", inspectTableName+"----InspectActivity");
 		String tempFile = fileDir+"/"+tableName+".xml";
 		if(FileUtils.prepareInspectFile(tempFile,newFileName)){
 			String inspectDir = FileUtils.getInspectDir();
@@ -452,42 +463,10 @@ public class InspectActivity extends Activity implements ExpandableListView.OnGr
 	}
 
 
-	@SuppressLint("ResourceAsColor")
 	@Override
 	public boolean onChildClick(ExpandableListView parent, View v,
-			final int groupPosition, final int childPosition, long id) {
+			int groupPosition, int childPosition, long id) {
 		// TODO Auto-generated method stub
-		Builder alertDialog = new AlertDialog.Builder(InspectActivity.this);
-		alertDialog.setTitle(childList.get(groupPosition).get(childPosition)).setSingleChoiceItems(new String[]{"正常","异常","无"},result.get(groupPosition).get(childPosition),new DialogInterface.OnClickListener() {
-
-			@Override
-			public void onClick(DialogInterface dialog, int which) {
-				// TODO Auto-generated method stub
-				//记录点检结果
-				result.get(groupPosition).set(childPosition, which);
-			}
-		}).setNegativeButton("确定", new DialogInterface.OnClickListener() {
-
-			@Override
-			public void onClick(DialogInterface dialog, int which) {
-				// TODO Auto-generated method stub
-				//记录点检结果
-				switch (result.get(groupPosition).get(childPosition)) {
-				case 0:
-					bg_color.get(groupPosition).set(childPosition, Color.parseColor("#E0FFFF"));
-					break;
-				case 1:
-					bg_color.get(groupPosition).set(childPosition, Color.parseColor("#FFE4E1"));
-					break;
-				case 2:
-					bg_color.get(groupPosition).set(childPosition, Color.parseColor("#FFF8DC"));
-					break;
-				}
-				adapter.setBg_color(bg_color);
-				adapter.notifyDataSetChanged();
-			}
-		}).show();
-
 		return false;
 	}
 
@@ -549,19 +528,7 @@ public class InspectActivity extends Activity implements ExpandableListView.OnGr
 	}
 
 	private void init(){
-		result = new ArrayList<List<Integer>>();
-		bg_color = new ArrayList<List<Integer>>();
 		isInspected = new ArrayList<Boolean>();
-		for(int i=0;i<childList.size();i++){
-			List<Integer> list = new ArrayList<Integer>();
-			List<Integer> list2 = new ArrayList<Integer>();
-			for(int j=0;j<childList.get(i).size();j++){
-				list.add(Color.parseColor("#E0FFFF"));
-				list2.add(0);
-			}
-			bg_color.add(list);
-			result.add(list2);
-		}
 		for(int i=0;i<groupList.size();i++){
 			isInspected.add(false);
 		}
@@ -581,6 +548,7 @@ public class InspectActivity extends Activity implements ExpandableListView.OnGr
 			@Override
 			public void onClick(DialogInterface dialog, int which) {
 				// TODO Auto-generated method stub
+				deleteImages();
 				FileUtils.deleteFile(filePath);
 				if(taskData!=null){
 					Intent it = new Intent(InspectActivity.this,TaskActivity.class);
@@ -606,6 +574,15 @@ public class InspectActivity extends Activity implements ExpandableListView.OnGr
 				+inspectTime.substring(12,14);
 		Log.i("msg", formatTime);
 		return formatTime;
+	}
+	
+	private void deleteImages(){
+		//重置点检的图片
+		List<String> images_inspect = imageDao.getInspectImages(tableName);
+		//删除图片
+		FileUtils.deleteImages(images_inspect);
+		//删除本地数据库记录
+		imageDao.deleteInspectImages(tableName);
 	}
 
 

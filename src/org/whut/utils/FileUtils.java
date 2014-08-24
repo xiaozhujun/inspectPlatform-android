@@ -8,6 +8,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.List;
 
 import android.annotation.SuppressLint;
 import android.os.Environment;
@@ -164,6 +165,25 @@ public class FileUtils {
 		File file = new File(filePath);
 		if(file.exists()){
 			file.delete();
+		}
+	}
+
+	public static void prepareImageDir(String imagePath) {
+		// TODO Auto-generated method stub
+		File dirFile = new File(imagePath);
+		if(!dirFile.exists()){
+			dirFile.mkdirs();
+		}
+		
+	}
+
+	public static void deleteImages(List<String> images_inspect) {
+		// TODO Auto-generated method stub
+		for(String path:images_inspect){
+			File file = new File(path);
+			if(file.exists()){
+				file.delete();
+			}
 		}
 	}	
 }

@@ -31,9 +31,9 @@
 	<string name="normal">正常</string>
 	<string name="abnormal">异常</string>
 	<string name="unknown">未知</string>
-	<string name="comments">添加备注</string>
 	<string name="menu">菜单</string>
-	<string name="addComment">添加备注</string>
+	<string name="addComment">备注</string>
+	<string name="take_picture">拍照</string>
 	
 	<!-- 点检历史界面相关 -->
 	<string name="history_title">点检历史</string>
@@ -55,4 +55,13 @@
 	<string name="uploadResult">上传点检结果</string>
 	<string name="uploadNow">现在上传</string>
 	<string name="uploadLater">暂不上传</string>
+	
+	<!-- 拍照界面相关 -->
+	<string name="save_pic">保存</string>
+	<string name="cancel">取消</string>
+	
+	<!-- 上传图片界面相关 -->
+	<string name="uploadImage">上传图片</string>
+	<string name="uploadImages">上传</string>
+	
 </resources>

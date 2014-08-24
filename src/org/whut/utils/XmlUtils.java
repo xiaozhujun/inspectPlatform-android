@@ -167,4 +167,24 @@ public class XmlUtils {
 		writer.close();	
 	}
 
+	public static List<List<Integer>> getInspectItemId(String filePath) throws Exception{
+		// TODO Auto-generated method stub
+
+		List<List<Integer>> list = new ArrayList<List<Integer>>();
+		SAXReader reader = new SAXReader();
+		Document document = reader.read(new File(filePath));
+		Element root = document.getRootElement();
+		Element e =root.element("devicetype");
+		List<Element> e1 = e.elements();
+		for(Element e2:e1){
+			List<Integer> temp = new ArrayList<Integer>();
+			List<Element> e3 = e2.elements();
+			for(Element e4:e3){
+				temp.add(Integer.parseInt(e4.attribute("itemId").getValue()));
+			}
+			list.add(temp);
+		}	
+		return list;
+	}
+
 }

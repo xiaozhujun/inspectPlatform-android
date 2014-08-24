@@ -89,8 +89,8 @@ public class MainActivity extends Activity{
 	private RelativeLayout account;
 
 
-	int[] images = {R.drawable.img_project,R.drawable.img_task,R.drawable.img_history};
-	String[] functions ={"点检项目","待做任务","点检记录"};
+	int[] images = {R.drawable.img_project,R.drawable.img_task,R.drawable.img_history,R.drawable.img_upload};
+	String[] functions ={"点检项目","待做任务","点检记录","图片上传"};
 	
 
 	/** 
@@ -292,6 +292,10 @@ public class MainActivity extends Activity{
 								it3.putExtra("locationData", locationData);
 								startActivity(it3);
 								break;
+							case 3:
+								Intent it4 = new Intent(MainActivity.this,ImageUploadActivity.class);
+								startActivity(it4);
+								break;
 							}
 						}
 					});
@@ -405,7 +409,7 @@ public class MainActivity extends Activity{
 		public void run() {
 			// TODO Auto-generated method stub
 			String message = CasClient.getInstance().doGet(UrlStrings.GET_CURRENT_USER);
-			Log.i("msg", message);
+//			Log.i("msg", message);
 			Message msg = Message.obtain();
 			try {
 				msg.obj = JsonUtils.GetUserData(message);
@@ -479,7 +483,7 @@ public class MainActivity extends Activity{
 		public void run() {
 			// TODO Auto-generated method stub
 			String message = CasClient.getInstance().doGet(UrlStrings.GET_TASK_LIST);
-			Log.i("msg", message);
+			Log.i("msg", "任务"+message);
 			Message msg = Message.obtain();
 			try {
 				taskData = JsonUtils.GetTaskList(message);

@@ -7,12 +7,15 @@ import java.util.Map;
 
 import org.apache.http.util.TextUtils;
 import org.whut.inspectplatform.R;
+import org.whut.platform.PictureActivity;
 
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.app.AlertDialog.Builder;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
+import android.graphics.Color;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -26,33 +29,48 @@ import android.widget.TextView;
 
 public class MyExpandableListAdapter extends BaseExpandableListAdapter{
 
-
-
 	private Context context;
 	private LayoutInflater inflater;
+	//组数据
 	private List<String> groupList;
+	//子数据
 	private List<List<String>> childList;
-	private List<List<Map<String,String>>> commentList;
-	private List<List<Integer>> bg_color;
 	
-	public MyExpandableListAdapter(Context context,List<String> groupList,List<List<String>> childList,List<List<Integer>> bg_color){
+	//备注数据
+	private List<List<Map<String,String>>> commentList;
+	//点检结果数据
+	private List<List<Integer>> result;
+	//点检项id数据
+	private List<List<Integer>> itemIds;
+	
+	//点检表名称
+	
+	private String inspectTableName;
+	
+	public MyExpandableListAdapter(Context context,List<String> groupList,List<List<String>> childList,List<List<Integer>> itemIds,String inspectTableName){
 		this.context = context;
 		this.groupList = groupList;
 		this.childList = childList;
+		this.itemIds = itemIds;
+		this.inspectTableName = inspectTableName;
 		inflater = LayoutInflater.from(context);
-		this.bg_color = bg_color;
 		
-		//初始化备注数据
+		//初始化数据
 		commentList = new ArrayList<List<Map<String,String>>>();
+		result = new ArrayList<List<Integer>>();
 		for(int i=0;i<groupList.size();i++){
 			List<Map<String,String>> list = new ArrayList<Map<String,String>>();
+			List<Integer> list2 = new ArrayList<Integer>();
 			for(int j=0;j<childList.get(i).size();j++){
 				Map<String,String> map = new HashMap<String,String>();
 				map.put("comment", "");
-				map.put("btnStatus", "添加备注");
+				map.put("btnStatus", "备注");
 				list.add(map);
+				// 0 , 代表正常
+				list2.add(0);
 			}
 			commentList.add(list);
+			result.add(list2);
 		}
 	}
 	
@@ -62,6 +80,18 @@ public class MyExpandableListAdapter extends BaseExpandableListAdapter{
 	public List<List<Map<String,String>>> getCommentList() {
 		return commentList;
 	}
+	
+	public List<List<Integer>> getResultList(){
+		return result;
+	}
+
+	
+	
+	public String getInspectTableName() {
+		return inspectTableName;
+	}
+
+
 
 	@Override
 	public View getGroupView(int groupPosition, boolean isExpanded,
@@ -101,16 +131,22 @@ public class MyExpandableListAdapter extends BaseExpandableListAdapter{
 		if(convertView == null){
 			convertView = inflater.inflate(R.layout.listitem_child, null);
 			holder = new ChildViewHolder();
-
 			holder.layout = (RelativeLayout) convertView.findViewById(R.id.rl_bg);
 			holder.textView = (TextView) convertView.findViewById(R.id.field);
+			holder.divider = (ImageView) convertView.findViewById(R.id.my_divider);
 			holder.btn_comment = (Button) convertView.findViewById(R.id.btn_comment);
+			holder.btn_camera = (Button) convertView.findViewById(R.id.btn_camera);
+			holder.btn_result = (Button) convertView.findViewById(R.id.btn_result);
 			convertView.setTag(holder);
 		}
+	
 		holder = (ChildViewHolder) convertView.getTag();
-		holder.layout.setBackgroundColor(bg_color.get(groupPosition).get(childPosition));
+		
 		holder.textView.setText(getChild(groupPosition, childPosition).toString());
-		final Button btn = holder.btn_comment;
+		
+		final RelativeLayout bg_color = holder.layout;
+		final Button btn_com = holder.btn_comment;
+		final Button btn_res = holder.btn_result;
 		
 		holder.btn_comment.setOnClickListener(new View.OnClickListener() {
 			
@@ -129,13 +165,13 @@ public class MyExpandableListAdapter extends BaseExpandableListAdapter{
 						commentList.get(groupPosition).get(childPosition).put("comment", comment);
 						Log.i("Debug", groupPosition+";"+childPosition);
 						if(!TextUtils.isEmpty(editText.getText().toString().trim())){
-							btn.setText("已添加");
+							btn_com.setText("已添加");
 							commentList.get(groupPosition).get(childPosition).put("btnStatus", "已添加");
-							btn.setBackgroundResource(R.drawable.common_btn_disable);
+							btn_com.setBackgroundResource(R.drawable.common_btn_disable);
 						}else{
-							btn.setText("添加备注");
-							commentList.get(groupPosition).get(childPosition).put("btnStatus", "添加备注");
-							btn.setBackgroundResource(R.drawable.common_btn_normal);
+							btn_com.setText("备注");
+							commentList.get(groupPosition).get(childPosition).put("btnStatus", "备注");
+							btn_com.setBackgroundResource(R.drawable.common_btn_normal);
 						}
 					}
 				}).setNegativeButton("取消", null).show();
@@ -143,11 +179,77 @@ public class MyExpandableListAdapter extends BaseExpandableListAdapter{
 		});
 		
 		if(commentList.get(groupPosition).get(childPosition).get("btnStatus").equals("已添加")){
-			btn.setText("已添加");
-			btn.setBackgroundResource(R.drawable.common_btn_disable);
+			btn_com.setText("已添加");
 		}else{
-			btn.setText("添加备注");
-			btn.setBackgroundResource(R.drawable.common_btn_normal);
+			btn_com.setText("备注");
+		}
+		
+		
+		holder.btn_camera.setText("拍照");
+		holder.btn_camera.setOnClickListener(new View.OnClickListener() {
+			
+			@Override
+			public void onClick(View v) {
+				// TODO Auto-generated method stub
+				Intent it = new Intent(context,PictureActivity.class);
+				it.putExtra("itemName", childList.get(groupPosition).get(childPosition));
+				it.putExtra("itemId", itemIds.get(groupPosition).get(childPosition));
+				Log.i("Debug", childList.get(groupPosition).get(childPosition)+":"+itemIds.get(groupPosition).get(childPosition));
+				it.putExtra("inspectTableName", getInspectTableName());
+				context.startActivity(it);
+			}
+		});
+		
+		holder.btn_result.setOnClickListener(new View.OnClickListener() {
+			
+			@Override
+			public void onClick(View v) {
+				// TODO Auto-generated method stub
+				Builder alertDialog = new AlertDialog.Builder(context);
+				alertDialog.setTitle(childList.get(groupPosition).get(childPosition)).setSingleChoiceItems(new String[]{"正常","异常","无"}, result.get(groupPosition).get(childPosition), new DialogInterface.OnClickListener() {
+					
+					@Override
+					public void onClick(DialogInterface dialog, int which) {
+						// TODO Auto-generated method stub
+						result.get(groupPosition).set(childPosition, which);
+					}
+				}).setPositiveButton("确定", new DialogInterface.OnClickListener() {
+					
+					@Override
+					public void onClick(DialogInterface dialog, int which) {
+						// TODO Auto-generated method stub
+						switch(result.get(groupPosition).get(childPosition)){
+						case 0://正常
+							bg_color.setBackgroundColor(Color.parseColor("#E0FFFF"));
+							btn_res.setText("正常");
+							break;
+						case 1://异常
+							bg_color.setBackgroundColor(Color.parseColor("#FFE4E1"));
+							btn_res.setText("异常");
+							break;
+						case 2://无
+							bg_color.setBackgroundColor(Color.parseColor("#FFF8DC"));
+							btn_res.setText("无");
+							break;
+						}
+					}
+				}).setNegativeButton("取消", null).show();
+			}
+		});
+		
+		switch(result.get(groupPosition).get(childPosition)){
+		case 0://正常
+			holder.layout.setBackgroundColor(Color.parseColor("#E0FFFF"));
+			holder.btn_result.setText("正常");
+			break;
+		case 1://异常
+			holder.layout.setBackgroundColor(Color.parseColor("#FFE4E1"));
+			holder.btn_result.setText("异常");
+			break;
+		case 2://无
+			holder.layout.setBackgroundColor(Color.parseColor("#FFF8DC"));
+			holder.btn_result.setText("无");
+			break;
 		}
 		
 		return convertView;
@@ -213,17 +315,9 @@ public class MyExpandableListAdapter extends BaseExpandableListAdapter{
 	class ChildViewHolder{
 		RelativeLayout layout;
 		TextView textView;
+		ImageView divider;
 		Button btn_comment;
-	}
-
-	public List<List<Integer>> getBg_color() {
-		return bg_color;
-	}
-
-
-	public void setBg_color(List<List<Integer>> bg_color) {
-		this.bg_color = bg_color;
-	}
-	
-
+		Button btn_camera;
+		Button btn_result;
+	}	
 }

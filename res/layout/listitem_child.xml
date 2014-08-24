@@ -2,33 +2,74 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/rl_bg"
     android:layout_width="fill_parent"
-    android:layout_height="wrap_content"
-    android:descendantFocusability="blocksDescendants"
+    android:layout_height="120dp"
+    android:clickable="false"
     android:paddingLeft="10dp"
     android:paddingRight="10dp" >
 
     <TextView
         android:id="@+id/field"
         android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:layout_alignParentLeft="true"
-        android:layout_centerVertical="true"
+        android:layout_height="60dp"
         android:focusable="false"
+        android:gravity="center_vertical"
         android:padding="10dp"
+        android:text="@string/app_name"
         android:textColor="@color/weightGray"
-        android:textSize="18sp" />
+        android:textSize="20sp" />
 
-    <Button
-        android:id="@+id/btn_comment"
-        style="?android:attr/buttonStyleSmall"
-        android:layout_width="wrap_content"
-        android:layout_height="35dp"
-        android:layout_alignRight="@+id/field"
-        android:layout_centerVertical="true"
-        android:layout_marginRight="30dp"
-        android:background="@drawable/common_btn_normal"
-		android:layout_margin="10dp"
-        android:focusable="false"
-        android:text="@string/comments" />
+    <ImageView
+        android:id="@+id/my_divider"
+        android:layout_width="fill_parent"
+        android:layout_height="1.0px"
+        android:layout_below="@id/field"
+        android:background="@drawable/list_divider"
+        android:contentDescription="@string/app_name" />
+
+    <RelativeLayout
+        android:id="@+id/button_group"
+        android:layout_width="fill_parent"
+        android:layout_height="80dp"
+        android:layout_below="@id/my_divider" >
+
+        <Button
+            android:id="@+id/btn_camera"
+            android:layout_width="wrap_content"
+            android:layout_height="30dp"
+            android:layout_alignParentLeft="true"
+            android:layout_centerVertical="true"
+            android:background="@drawable/common_btn_selector"
+            android:drawableLeft="@drawable/ic_camera"
+            android:paddingLeft="5dp" />
+
+        <Button
+            android:id="@+id/btn_result"
+            android:layout_width="wrap_content"
+            android:layout_height="30dp"
+            android:layout_alignBaseline="@+id/btn_comment"
+            android:layout_alignBottom="@+id/btn_comment"
+            android:layout_centerHorizontal="true"
+            android:background="@drawable/common_btn_selector"
+            android:drawableLeft="@drawable/ic_result"
+            android:paddingLeft="5dp" />
+
+        <Button
+            android:id="@+id/btn_comment"
+            android:layout_width="wrap_content"
+            android:layout_height="30dp"
+            android:layout_alignBaseline="@+id/btn_camera"
+            android:layout_alignBottom="@+id/btn_camera"
+            android:layout_alignParentRight="true"
+            android:background="@drawable/common_btn_selector"
+            android:drawableLeft="@drawable/ic_comment"
+            android:paddingLeft="5dp" />
+    </RelativeLayout>
+    
+    <TextView 
+        android:layout_alignParentBottom="true"
+        android:layout_width="fill_parent"
+        android:layout_height="3.0px"
+        android:background="@color/darkgrey"
+        />
 
 </RelativeLayout>
