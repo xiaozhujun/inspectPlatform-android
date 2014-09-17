@@ -1,6 +1,5 @@
 package org.whut.platform;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -13,7 +12,6 @@ import org.whut.adapter.MyImageListAdapter;
 import org.whut.client.CasClient;
 import org.whut.database.entity.service.impl.InspectImageServiceDao;
 import org.whut.inspectplatform.R;
-import org.whut.strings.FileStrings;
 import org.whut.strings.UrlStrings;
 import org.whut.utils.BitmapUtils;
 import org.whut.utils.JsonUtils;
@@ -41,13 +39,24 @@ public class ImageUploadActivity extends Activity{
 	private static MyImageListAdapter adapter;
 	private static List<Map<String,String>> list;
 	private static InspectImageServiceDao dao;
+
 	
 	private static Handler handler;
 
 	private boolean no_photo = false;
 	
-	private static int flag;
+	private static int flag; 
+	
+	private int userId;
 
+	
+	@Override
+	public void onBackPressed() {
+		// TODO Auto-generated method stub
+		new Thread(new MainActivity.UpdateBadageViewThread()).start();
+		finish();
+	}
+	
 	@SuppressLint("HandlerLeak")
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -55,6 +64,11 @@ public class ImageUploadActivity extends Activity{
 		super.onCreate(savedInstanceState);
 
 		setContentView(R.layout.activity_imageupload);
+		
+		
+		dao = new InspectImageServiceDao(ImageUploadActivity.this);
+		userId = getIntent().getIntExtra("userId", 0);
+		Log.i("database", userId+","+"--------ImageUploadActivity");
 		
 		listView = (ListView) findViewById(R.id.listView_image);
 		left_back = (ImageView) findViewById(R.id.iv_topbar_left_back);
@@ -88,6 +102,7 @@ public class ImageUploadActivity extends Activity{
 			@Override
 			public void onClick(View v) {
 				// TODO Auto-generated method stub
+				new Thread(new MainActivity.UpdateBadageViewThread()).start();
 				finish();
 			}
 		});
@@ -108,33 +123,19 @@ public class ImageUploadActivity extends Activity{
 	}
 
 	private void init(){
-		paths = new ArrayList<String>();
-		File[] files = null;
-		File file = new File(FileStrings.IMAGE_PATH);
 		
-		if(file.listFiles()==null){
-			no_photo=true;
-		}else{
-			files = file.listFiles();
-				if(files.length==0){
-					no_photo = true;
-			}
+		paths = new ArrayList<String>();
+		paths = dao.getInspectImagesByUserId(userId);	
+		Log.i("database", paths.toString());
+		if(paths.size()==0){
+			no_photo = true;
 		}
 		
-		
-
-
-
-
 		if(no_photo){
 			//没有图片记录
 			listView.setVisibility(View.GONE);
 			Toast.makeText(ImageUploadActivity.this, "暂无图片可上传！", Toast.LENGTH_SHORT).show();
 		}else{
-			for(File f:files){
-				paths.add(f.getAbsolutePath());
-			}
-
 			//获取图片数据
 			getImages();
 

@@ -185,5 +185,14 @@ public class FileUtils {
 				file.delete();
 			}
 		}
+	}
+
+	@SuppressLint("SdCardPath")
+	public static void createUpdateDirectory() {
+		// TODO Auto-generated method stub
+		File dirFile = new File("/sdcard/inspect/update");
+		if(!dirFile.exists()){
+			dirFile.mkdirs();
+		}
 	}	
 }

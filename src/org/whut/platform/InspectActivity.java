@@ -18,6 +18,7 @@ import org.whut.database.entity.Task;
 import org.whut.database.entity.service.impl.HistoryServiceDao;
 import org.whut.database.entity.service.impl.InspectImageServiceDao;
 import org.whut.database.entity.service.impl.TaskServiceDao;
+import org.whut.database.entity.service.impl.UserServiceDao;
 import org.whut.entity.Listable;
 import org.whut.entity.Location;
 import org.whut.entity.Tag;
@@ -66,10 +67,13 @@ public class InspectActivity extends Activity implements ExpandableListView.OnGr
 	private List<String> groupList;
 	private List<List<String>> childList;
 	private List<List<Integer>> itemIds;
+	private List<List<String[]>> resultList;
 	private MyExpandableListAdapter adapter;
 
 	private List<Boolean> isInspected;
-
+	//用户是否达成点检条件允许保存
+	private boolean allow_save = false;
+	
 	
 	//提示框
 	private ProgressDialog dialog;
@@ -93,17 +97,19 @@ public class InspectActivity extends Activity implements ExpandableListView.OnGr
 	//从上一Activity中传来的数据
 	private Location locationData;
 	private List<Task> taskData;
+	private int userId;
+	private int inspectType;
 	private Task task;
 	private String tableName;
 	
 	//点检表名字，不带路径的
 	private String inspectTableName;
-
 	private String inspectTime;
 	private String deviceNum;
 
 	private String fileDir;
 	private String filePath;
+	
 
 	private HistoryServiceDao dao;
 	private InspectImageServiceDao imageDao;
@@ -174,32 +180,53 @@ public class InspectActivity extends Activity implements ExpandableListView.OnGr
 				switch(arg2){
 				case 0://保存
 					//此方法将点检结果保存在相应的点检表中，并返回点检表名
-					try {
-						XmlUtils.saveInspectResult(adapter.getCommentList(),adapter.getResultList(), filePath);
-					} catch (Exception e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
+					switch(inspectType){
+					case 1:
+						break;
+					case 2://至少一卡
+						break;
+					case 3://全部卡
+						allow_save = true;
+						for(int i=0;i<isInspected.size();i++){
+							if(!isInspected.get(i)){
+								allow_save = false;
+							}
+						}
+						break;
 					}
-					menuDialog.dismiss();
-					Toast.makeText(InspectActivity.this, "点检结果已保存在<"+filePath+">中", Toast.LENGTH_SHORT).show();
-					//开始更新定位数据
-					History history = new History();
-					history.setFilePath(filePath);
-					history.setUserId(locationData.getUserId());
-					history.setUserName(locationData.getUserName());
-					history.setInspectTableName(inspectTableName);
-					history.setUploadFlag(0);
-					history.setInspectTime(inspectTime);
-					dao.addHistory(history);
-					//若为日常任务，则更新数据库localStatus为1（已完成）
-					if(taskData!=null){
-						TaskServiceDao dao = new TaskServiceDao(InspectActivity.this);
-						dao.updateLocalStatus(task.getId());
+					
+					
+					if(allow_save){
+						try {
+							XmlUtils.saveInspectResult(adapter.getCommentList(),adapter.getResultList(), filePath);
+						} catch (Exception e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+						menuDialog.dismiss();
+						Toast.makeText(InspectActivity.this, "点检结果已保存在<"+filePath+">中", Toast.LENGTH_SHORT).show();
+						//开始更新定位数据
+						History history = new History();
+						history.setFilePath(filePath);
+						history.setUserId(locationData.getUserId());
+						history.setUserName(locationData.getUserName());
+						history.setInspectTableName(inspectTableName);
+						history.setUploadFlag(0);
+						history.setInspectTime(inspectTime);
+						dao.addHistory(history);
+						//若为日常任务，则更新数据库localStatus为1（已完成）
+						if(taskData!=null){
+							TaskServiceDao dao = new TaskServiceDao(InspectActivity.this);
+							dao.updateLocalStatus(task.getId());
+						}
+						//更新主界面历史数据
+						new Thread(new MainActivity.UpdateBadageViewThread()).start();
+						//点检完毕，发送位置信息
+						new Thread(new SendLocationAfterInspectThread()).start();
+					}else{
+						Toast.makeText(InspectActivity.this, "仍有区域尚未点检，请点检后再点击保存！", Toast.LENGTH_SHORT).show();
+						menuDialog.dismiss();
 					}
-					//更新主界面历史数据
-					new Thread(new MainActivity.HandleHistoryThread()).start();
-					//点检完毕，发送位置信息
-					new Thread(new SendLocationAfterInspectThread()).start();
 					break;
 				case 1://重置数据
 					menuDialog.dismiss();
@@ -211,7 +238,7 @@ public class InspectActivity extends Activity implements ExpandableListView.OnGr
 						public void onClick(DialogInterface dialog, int which) {
 							// TODO Auto-generated method stub
 							init();
-							adapter =  new MyExpandableListAdapter(InspectActivity.this, groupList, childList,itemIds,inspectTableName);
+							adapter =  new MyExpandableListAdapter(InspectActivity.this, groupList, childList,itemIds,resultList,inspectTableName,userId);
 							listView.setAdapter(adapter);
 							//处理图片
 							deleteImages();
@@ -296,7 +323,7 @@ public class InspectActivity extends Activity implements ExpandableListView.OnGr
 			}
 		};
 
-		adapter = new MyExpandableListAdapter(InspectActivity.this, groupList, childList,itemIds,inspectTableName);
+		adapter = new MyExpandableListAdapter(InspectActivity.this, groupList, childList,itemIds,resultList,inspectTableName,userId);
 		listView.setAdapter(adapter);
 		listView.setOnGroupExpandListener(new OnGroupExpandListener() {
 
@@ -410,7 +437,7 @@ public class InspectActivity extends Activity implements ExpandableListView.OnGr
 			imageDao = new InspectImageServiceDao(InspectActivity.this);
 			
 			locationData = (Location) getIntent().getExtras().getSerializable("locationData");
-
+			
 			if(getIntent().getExtras().getSerializable("taskData")!=null){
 				taskData = (List<Task>) getIntent().getExtras().getSerializable("taskData");
 				task = (Task) getIntent().getExtras().getSerializable("task");
@@ -418,6 +445,10 @@ public class InspectActivity extends Activity implements ExpandableListView.OnGr
 
 			tableName = getIntent().getExtras().getString("tableName");
 
+			userId = locationData.getUserId();
+			
+			inspectType = new UserServiceDao(InspectActivity.this).findInspectTypeByUserId(userId);
+			
 			locationData.setInspectTableName(tableName);
 			
 			fileDir = FileStrings.BASE_PATH;
@@ -433,7 +464,8 @@ public class InspectActivity extends Activity implements ExpandableListView.OnGr
 			groupList = XmlUtils.getInspectLocation(filePath);
 			childList = XmlUtils.getInspectField(filePath);
 			itemIds = XmlUtils.getInspectItemId(filePath);
-			
+			resultList = XmlUtils.getInspectResultListFromOriginal(FileStrings.BASE_PATH+"/"+(tableName.split("-")[0])+".xml");
+			Log.i("ExpandableListView", FileStrings.BASE_PATH+"/"+tableName+".xml");
 			init();
 
 
@@ -528,10 +560,12 @@ public class InspectActivity extends Activity implements ExpandableListView.OnGr
 	}
 
 	private void init(){
+		
 		isInspected = new ArrayList<Boolean>();
 		for(int i=0;i<groupList.size();i++){
 			isInspected.add(false);
 		}
+
 	}
 
 
@@ -578,7 +612,7 @@ public class InspectActivity extends Activity implements ExpandableListView.OnGr
 	
 	private void deleteImages(){
 		//重置点检的图片
-		List<String> images_inspect = imageDao.getInspectImages(tableName);
+		List<String> images_inspect = imageDao.getInspectImages(userId,tableName);
 		//删除图片
 		FileUtils.deleteImages(images_inspect);
 		//删除本地数据库记录
@@ -723,6 +757,8 @@ public class InspectActivity extends Activity implements ExpandableListView.OnGr
 				for(int i=0;i<groupList.size();i++){
 					if(groupList.get(i).equals(area)){
 						isInspected.set(i, true);
+						Log.i("msg", "i"+":"+isInspected.get(i));
+						allow_save = true;
 						listView.expandGroup(i);
 						//将deviceNum加入点检表
 						try {

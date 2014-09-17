@@ -28,6 +28,8 @@ public class User{
 	private String sex;
 	//用户权限
 	private String userRole;
+	//点检类型
+	private int inspectType;
 
 	
 	public String getRole() {
@@ -78,4 +80,12 @@ public class User{
 	public void setUserRole(String userRole) {
 		this.userRole = userRole;
 	}
+	public int getInspectType() {
+		return inspectType;
+	}
+	public void setInspectType(int inspectType) {
+		this.inspectType = inspectType;
+	}
+	
+	
 }

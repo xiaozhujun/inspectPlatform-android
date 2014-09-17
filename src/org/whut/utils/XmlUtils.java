@@ -14,6 +14,8 @@ import org.dom4j.io.SAXReader;
 import org.dom4j.io.XMLWriter;
 import org.whut.strings.FileStrings;
 
+import android.util.Log;
+
 
 
 @SuppressWarnings("unchecked")
@@ -71,9 +73,37 @@ public class XmlUtils {
 			for(Element e4:e3){
 				temp.add(e4.attribute("name").getValue());
 			}
+			Log.i("ExpandableListView", temp.toString());
 			list.add(temp);
 		}	
 		return list;
+	}
+	
+	public static List<List<String[]>> getInspectResultListFromOriginal(String originalPath) throws Exception{
+		List<List<String[]>> list = new ArrayList<List<String[]>>();
+		SAXReader reader = new SAXReader();
+		Document document = reader.read(new File(originalPath));
+		Element root = document.getRootElement();
+		Element e =root.element("devicetype");
+		List<Element> e1 = e.elements();
+		for(Element e2 : e1){
+			List<String[]> temp = new ArrayList<String[]>();
+			List<Element> e3 = e2.elements();
+			for(Element e4:e3){
+				List<Element> e5 = e4.elements();
+				String array[] = new String[e5.size()];
+				for(int i=0;i<e5.size();i++){
+					array[i] = e5.get(i).attribute("name").getValue();
+				}
+				temp.add(array);
+			}
+			Log.i("ExpandableListView", temp.toString()+"original");	
+			list.add(temp);		
+		}
+		
+		
+		return list;
+		
 	}
 
 	public static void saveInspectResult(List<List<Map<String,String>>> commentList,List<List<Integer>> result, String filePath) throws Exception{

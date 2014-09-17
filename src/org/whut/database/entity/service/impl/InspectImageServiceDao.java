@@ -24,10 +24,11 @@ public class InspectImageServiceDao implements InspectImageService{
 	}
 	
 	@Override
-	public void addInspectImage(int itemId, String filePath,String inspectTableName,String itemName,int uploadFlag) {
+	public void addInspectImage(int userId,int itemId, String filePath,String inspectTableName,String itemName,int uploadFlag) {
 		// TODO Auto-generated method stub
+		Log.i("database", userId+","+"------addInspectImage");
 		db.beginTransaction();
-		db.execSQL("insert into inspectimage(itemId,filePath,inspectTableName,itemName,uploadFlag) values(?,?,?,?,?)",new Object[]{itemId,filePath,inspectTableName,itemName,uploadFlag});
+		db.execSQL("insert into inspectimage(userId,itemId,filePath,inspectTableName,itemName,uploadFlag) values(?,?,?,?,?,?)",new Object[]{userId,itemId,filePath,inspectTableName,itemName,uploadFlag});
 		db.setTransactionSuccessful();
 		db.endTransaction();
 	}
@@ -48,10 +49,10 @@ public class InspectImageServiceDao implements InspectImageService{
 	}
 
 	//根据点检表名称，返回图片的地址集合
-	public List<String> getInspectImages(String inspectTableName) {
+	public List<String> getInspectImages(int userId,String inspectTableName) {
 		// TODO Auto-generated method stub
 		List<String> list = new ArrayList<String>();
- 		Cursor cursor = db.rawQuery("select * from inspectimage where inspectTableName=?", new String[]{inspectTableName});
+ 		Cursor cursor = db.rawQuery("select * from inspectimage where userId=? and inspectTableName=?", new String[]{userId+"",inspectTableName});
  		while(cursor.moveToNext()){
  			String temp = cursor.getString(cursor.getColumnIndex("filePath"));
  			list.add(temp);
@@ -146,6 +147,27 @@ public class InspectImageServiceDao implements InspectImageService{
 			return cursor.getInt(cursor.getColumnIndex("itemId"));
 		}
 		return 0;
+	}
+
+	public int queryUnuploadedImage(int userId) {
+		// TODO Auto-generated method stub
+		int temp = 0;
+		Cursor cursor = db.rawQuery("select * from inspectimage where userId=? and uploadFlag=?", new String[]{userId+"",0+""});
+		while(cursor.moveToNext()){
+			temp = temp+1;
+		}
+		return temp;
+	}
+
+	public List<String> getInspectImagesByUserId(int userId) {
+		// TODO Auto-generated method stub
+		List<String> list = new ArrayList<String>();
+ 		Cursor cursor = db.rawQuery("select * from inspectimage where userId=?", new String[]{userId+""});
+		while(cursor.moveToNext()){
+			Log.i("database", "-----getInspectImagesForTableNames"+","+cursor.getString(cursor.getColumnIndex("filePath")));
+			list.add(cursor.getString(cursor.getColumnIndex("filePath")));
+		}
+		return list;
 	}
 
 	

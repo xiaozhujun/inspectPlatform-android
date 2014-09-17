@@ -98,6 +98,7 @@ public class MyImageListAdapter extends BaseAdapter{
 		
 
 		File file =  new File(list.get(position).get("filePath"));
+		
 		String filename = file.getName();
 		
 		
@@ -108,11 +109,7 @@ public class MyImageListAdapter extends BaseAdapter{
 			@Override
 			public void onClick(View v) {
 				// TODO Auto-generated method stub
-				new Thread(new ImageUploadActivity.UploadImageThread(position)).start();
-			
-				
-				
-				
+				new Thread(new ImageUploadActivity.UploadImageThread(position)).start();	
 			}
 		});
 

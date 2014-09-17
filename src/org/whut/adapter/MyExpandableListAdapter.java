@@ -42,17 +42,21 @@ public class MyExpandableListAdapter extends BaseExpandableListAdapter{
 	private List<List<Integer>> result;
 	//点检项id数据
 	private List<List<Integer>> itemIds;
-	
+	//点检项结果列表
+	private List<List<String[]>> resultList;
 	//点检表名称
-	
 	private String inspectTableName;
 	
-	public MyExpandableListAdapter(Context context,List<String> groupList,List<List<String>> childList,List<List<Integer>> itemIds,String inspectTableName){
+	private int userId;
+	
+	public MyExpandableListAdapter(Context context,List<String> groupList,List<List<String>> childList,List<List<Integer>> itemIds,List<List<String[]>> resultList,String inspectTableName,int userId){
 		this.context = context;
 		this.groupList = groupList;
 		this.childList = childList;
 		this.itemIds = itemIds;
+		this.resultList = resultList;
 		this.inspectTableName = inspectTableName;
+		this.userId = userId;
 		inflater = LayoutInflater.from(context);
 		
 		//初始化数据
@@ -134,6 +138,7 @@ public class MyExpandableListAdapter extends BaseExpandableListAdapter{
 			holder.layout = (RelativeLayout) convertView.findViewById(R.id.rl_bg);
 			holder.textView = (TextView) convertView.findViewById(R.id.field);
 			holder.divider = (ImageView) convertView.findViewById(R.id.my_divider);
+			holder.btn_warning = (Button) convertView.findViewById(R.id.btn_warning);
 			holder.btn_comment = (Button) convertView.findViewById(R.id.btn_comment);
 			holder.btn_camera = (Button) convertView.findViewById(R.id.btn_camera);
 			holder.btn_result = (Button) convertView.findViewById(R.id.btn_result);
@@ -144,9 +149,33 @@ public class MyExpandableListAdapter extends BaseExpandableListAdapter{
 		
 		holder.textView.setText(getChild(groupPosition, childPosition).toString());
 		
+		
+		holder.btn_warning.setText("要求");
+		holder.btn_warning.setOnClickListener(new View.OnClickListener() {
+			
+			@Override
+			public void onClick(View v) {
+				// TODO Auto-generated method stub
+				Builder alertDialog = new AlertDialog.Builder(context);
+				alertDialog.setTitle("点检说明").setMessage("点检说明").show();
+			}
+		});
+		
+		
+		
+		
+		
+		
+		
+		
+		
 		final RelativeLayout bg_color = holder.layout;
 		final Button btn_com = holder.btn_comment;
 		final Button btn_res = holder.btn_result;
+		
+		
+		
+		
 		
 		holder.btn_comment.setOnClickListener(new View.OnClickListener() {
 			
@@ -194,6 +223,7 @@ public class MyExpandableListAdapter extends BaseExpandableListAdapter{
 				Intent it = new Intent(context,PictureActivity.class);
 				it.putExtra("itemName", childList.get(groupPosition).get(childPosition));
 				it.putExtra("itemId", itemIds.get(groupPosition).get(childPosition));
+				it.putExtra("userId", userId);
 				Log.i("Debug", childList.get(groupPosition).get(childPosition)+":"+itemIds.get(groupPosition).get(childPosition));
 				it.putExtra("inspectTableName", getInspectTableName());
 				context.startActivity(it);
@@ -206,7 +236,7 @@ public class MyExpandableListAdapter extends BaseExpandableListAdapter{
 			public void onClick(View v) {
 				// TODO Auto-generated method stub
 				Builder alertDialog = new AlertDialog.Builder(context);
-				alertDialog.setTitle(childList.get(groupPosition).get(childPosition)).setSingleChoiceItems(new String[]{"正常","异常","无"}, result.get(groupPosition).get(childPosition), new DialogInterface.OnClickListener() {
+				alertDialog.setTitle(childList.get(groupPosition).get(childPosition)).setSingleChoiceItems(resultList.get(groupPosition).get(childPosition), result.get(groupPosition).get(childPosition), new DialogInterface.OnClickListener() {
 					
 					@Override
 					public void onClick(DialogInterface dialog, int which) {
@@ -316,6 +346,7 @@ public class MyExpandableListAdapter extends BaseExpandableListAdapter{
 		RelativeLayout layout;
 		TextView textView;
 		ImageView divider;
+		Button btn_warning;
 		Button btn_comment;
 		Button btn_camera;
 		Button btn_result;

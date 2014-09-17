@@ -40,6 +40,7 @@ public class PictureActivity extends Activity{
 	private String itemName;
 	private String inspectTableName;
 	private int itemId;
+	private int userId;
 	
 	private File myPhoto;
 	
@@ -67,6 +68,8 @@ public class PictureActivity extends Activity{
 		itemName = getIntent().getStringExtra("itemName");
 
 		itemId = getIntent().getIntExtra("itemId",0);
+		
+		userId = getIntent().getIntExtra("userId", 0);
 		
 		inspectTableName = getIntent().getStringExtra("inspectTableName");
 		
@@ -135,7 +138,7 @@ public class PictureActivity extends Activity{
 						Toast.makeText(PictureActivity.this, "文件已保存在<"+filePath+">中", Toast.LENGTH_SHORT).show();
 						//数据库中建立关联
 						if(itemId!=0){
-							dao.addInspectImage(itemId,filePath,inspectTableName,itemName,0);
+							dao.addInspectImage(userId,itemId,filePath,inspectTableName,itemName,0);
 						}
 						finish();
 					}

@@ -38,10 +38,10 @@ public class DBHelper extends SQLiteOpenHelper{
 //				"uploadflag varchar(255),tableflag varchar(255)," +
 //				"filesavepath varchar(255))");
 		
-		db.execSQL("CREATE TABLE IF NOT EXISTS USER(id integer primary key,role varchar(255),roleNum varchar(255),name varchar(255),userName varchar(255),image varchar(255),sex varchar(255),userRole varchar(255))");
+		db.execSQL("CREATE TABLE IF NOT EXISTS USER(id integer primary key,role varchar(255),roleNum varchar(255),name varchar(255),userName varchar(255),image varchar(255),sex varchar(255),userRole varchar(255),inspectType varchar(255))");
 		db.execSQL("CREATE TABLE IF NOT EXISTS TASK(taskId integer primary key autoincrement,id integer,inspectPlanId integer,inspectTableId integer,inspectTableRecord integer,userId integer,deviceId integer,faultCount integer,inspectTime varchar(255),createtime varchar(255),status integer,taskDate varchar(255),timeStart integer,timeEnd integer,appId integer,tableName varchar(255),planName varchar(255),deviceName varchar(255),userName varchar(255),startDay varchar(255),endDay varchar(255),localStatus integer)");
 		db.execSQL("CREATE TABLE IF NOT EXISTS HISTORY(historyId integer primary key autoincrement, userId integer, userName varchar(255),filePath varchar(255),inspectTableName varchar(255),deviceName varchar(255),uploadFlag integer, inspectTime varchar(255))");
-		db.execSQL("CREATE TABLE IF NOT EXISTS INSPECTIMAGE(id integer primary key autoincrement,itemId integer,filePath varchar(255),inspectTableName varchar(255),itemName varchar(255),uploadFlag interger,tableRecordId integer,itemRecordId integer,appId integer)");
+		db.execSQL("CREATE TABLE IF NOT EXISTS INSPECTIMAGE(id integer primary key autoincrement,itemId integer,filePath varchar(255),inspectTableName varchar(255),itemName varchar(255),userId integer,uploadFlag interger,tableRecordId integer,itemRecordId integer,appId integer)");
 		Log.i("msg", "DB创建完成...");
 	}
 

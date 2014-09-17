@@ -9,7 +9,7 @@
 
     <TextView
         android:id="@+id/field"
-        android:layout_width="fill_parent"
+        android:layout_width="wrap_content"
         android:layout_height="60dp"
         android:focusable="false"
         android:gravity="center_vertical"
@@ -64,12 +64,22 @@
             android:drawableLeft="@drawable/ic_comment"
             android:paddingLeft="5dp" />
     </RelativeLayout>
-    
-    <TextView 
-        android:layout_alignParentBottom="true"
+
+    <TextView
         android:layout_width="fill_parent"
         android:layout_height="3.0px"
-        android:background="@color/darkgrey"
-        />
+        android:layout_alignParentBottom="true"
+        android:background="@color/darkgrey" />
+
+    <Button
+        android:id="@+id/btn_warning"
+        android:layout_width="wrap_content"
+        android:layout_height="30dp"
+        android:layout_alignBaseline="@id/field"
+        android:layout_alignBottom="@id/field"
+        android:layout_alignRight="@id/button_group"
+        android:background="@drawable/common_btn_selector"
+        android:drawableLeft="@drawable/question"
+        android:paddingLeft="5dp" />
 
 </RelativeLayout>

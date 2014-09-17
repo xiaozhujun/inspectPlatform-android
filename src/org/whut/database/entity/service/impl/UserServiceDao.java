@@ -24,9 +24,9 @@ public class UserServiceDao implements UserService{
 	public void addUser(HashMap<String, Object> map) {
 		// TODO Auto-generated method stub
 		db.beginTransaction();
-		db.execSQL("insert into user(role,roleNum,name,userName,id,image,sex,userRole) values(?,?,?,?,?,?,?,?)",
+		db.execSQL("insert into user(role,roleNum,name,userName,id,image,sex,userRole,inspectType) values(?,?,?,?,?,?,?,?,?)",
 				new Object[]{map.get("role"),map.get("roleNum"),map.get("name"),
-				map.get("userName"),map.get("id"),map.get("image"),map.get("sex"),map.get("userRole")});
+				map.get("userName"),map.get("id"),map.get("image"),map.get("sex"),map.get("userRole"),map.get("inspectType")});
 		Log.i("msg", "已完成用户添加.");
 		db.setTransactionSuccessful();
 		db.endTransaction();
@@ -82,6 +82,15 @@ public class UserServiceDao implements UserService{
 			return cursor.getString(cursor.getColumnIndex("image"));
 		}
 		return null;
+	}
+
+	public int findInspectTypeByUserId(int userId) {
+		// TODO Auto-generated method stub
+		Cursor cursor = db.rawQuery("select * from user where id=?", new String[]{userId+""});
+		while(cursor.moveToNext()){
+			return cursor.getInt(cursor.getColumnIndex("inspectType"));
+		}
+		return -1;
 	}
 	
 	

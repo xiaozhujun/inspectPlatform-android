@@ -31,7 +31,7 @@ public class JsonUtils {
 	public static HashMap<String,Object> GetUserData(String message) throws Exception{
 		HashMap<String,Object> map = new HashMap<String, Object>();
 		JSONObject jsonObject = new JSONObject(message);
-		if(jsonObject.getString("message").equals(SUCCESS)){
+		if(jsonObject.getInt("code")==200){
 			JSONObject jsonItem = jsonObject.getJSONObject("data");
 			map.put("role", jsonItem.getString("role"));
 			map.put("roleNum", jsonItem.getInt("roleNum"));
@@ -144,9 +144,11 @@ public class JsonUtils {
 		return false;
 	}
 	
-	public static boolean UploadIsSuccess(String msg) throws Exception{
-		JSONObject jsonObject = new JSONObject(msg);
-		if (jsonObject.getString("code").equals("200")) {
+	public static boolean UploadIsSuccess(String message) throws Exception{
+		JSONObject jsonObject = new JSONObject(message);
+		if(Integer.parseInt(jsonObject.getString("code"))==200){
+		
+			Log.i("msg", jsonObject.getString("code")+jsonObject.getString("message"));
 			return true;
 		}
 		return false;
@@ -176,6 +178,13 @@ public class JsonUtils {
 			list.add(map);
 		}
 		return list;
+	}
+
+
+	public static int getLatestVersion(String message) throws Exception{
+		// TODO Auto-generated method stub
+		JSONObject jsonObject = new JSONObject(message);
+		return jsonObject.getInt("versionCode");
 	}
 	
 	

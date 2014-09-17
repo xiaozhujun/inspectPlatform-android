@@ -71,6 +71,16 @@ public class TaskServiceDao implements TaskService{
 		return -1;
 	}
 
+	public int queryUnfinishedTask(int userId) {
+		// TODO Auto-generated method stub
+		int temp = 0;
+		Cursor cursor = db.rawQuery("select * from task where userId=? and localStatus=?", new String[]{userId+"","0"});
+		while(cursor.moveToNext()){
+			temp = temp+1;
+		}
+		return temp;
+	}
+
 
 
 

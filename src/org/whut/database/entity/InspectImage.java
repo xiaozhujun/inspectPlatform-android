@@ -9,6 +9,8 @@ public class InspectImage {
 	private String filePath;
 	//所属表名
 	private String inspectTableName;
+	//所属用户
+	private int userId;
 	//点检项名
 	private String itemName;
 	//是否上传
@@ -17,6 +19,17 @@ public class InspectImage {
 	private int tableRecordId;
 	//服务器端返回
 	private int itemRecordId;
+
+	
+	
+
+	public int getUserId() {
+		return userId;
+	}
+
+	public void setUserId(int userId) {
+		this.userId = userId;
+	}
 
 	public int getId() {
 		return id;

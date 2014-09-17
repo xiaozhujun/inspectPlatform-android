@@ -2,9 +2,11 @@ package org.whut.client;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -34,10 +36,13 @@ import org.apache.http.entity.mime.HttpMultipartMode;
 import org.apache.http.entity.mime.MultipartEntity;
 import org.apache.http.entity.mime.content.FileBody;
 import org.apache.http.entity.mime.content.StringBody;
+import org.whut.platform.MainActivity;
 import org.whut.platform.UploadActivity;
 import org.whut.utils.CustomMultiPartEntity;
 import org.whut.utils.CustomMultiPartEntity.ProgressListener;
+import org.whut.utils.FileUtils;
 
+import android.annotation.SuppressLint;
 import android.os.Message;
 import android.util.Log;
 
@@ -279,6 +284,58 @@ synchronized public String doSendFile(String ServicePath,String FilePath) throws
 		return EntityUtils.toString(resEntity);
 	}
 
+	/***
+	 * 
+	 * @author Yone 
+	 * 
+	 * 
+	 */
+
+	@SuppressLint("SdCardPath")
+	synchronized public void doGetUpdateFile(String ServicePath){
+		HttpGet httpGet = new HttpGet(ServicePath);
+		InputStream inStream=null;
+		long downloadedLength=0;
+		try
+		{
+			
+		FileUtils.createUpdateDirectory();
+		OutputStream outStream = new FileOutputStream(new File("/sdcard/inspect/update/InspectPlatform.apk"));
+		synchronized (httpClient) {
+				HttpResponse response = httpClient.execute(httpGet);
+				switch (response.getStatusLine().getStatusCode())
+				{
+				case 200:
+					long length = response.getEntity().getContentLength();
+					inStream =  response.getEntity().getContent();
+					byte[] bytes = new byte[1024];  
+		            int len = -1;  
+		            while((len = inStream.read(bytes))!=-1){  
+		                    outStream.write(bytes, 0, len);  
+		                    downloadedLength+=len;
+							Message msg = Message.obtain();
+							msg.arg1=(int)(downloadedLength*100/length);
+							msg.what = 9;
+							MainActivity.handler.sendMessage(msg); 
+		                }					
+					break;
+				default:
+					break;
+				}
+			}
+			
+		inStream.close();
+		outStream.close();
+
+		}
+		catch (Exception e)
+		{
+			e.printStackTrace();
+		}
+	}
+
+
+
 /***
  * 
  * @param service
@@ -319,8 +376,7 @@ synchronized public String doSendFile(String ServicePath,String FilePath) throws
 	public String doGet(String service){
 		Log.i("cas client doGet url:", service);
 		HttpGet httpGet = new HttpGet (service);
-		try
-		{
+		try{
 			synchronized (httpClient) {
 				HttpResponse response = httpClient.execute(httpGet);
 				String responseBody = getResponseBody(response);

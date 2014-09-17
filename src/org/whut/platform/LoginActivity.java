@@ -8,7 +8,10 @@ import org.whut.strings.UrlStrings;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.content.SharedPreferences.Editor;
 //import android.content.SharedPreferences;
 //import android.content.SharedPreferences.Editor;
 import android.os.Bundle;
@@ -35,11 +38,11 @@ public class LoginActivity extends Activity{
 	private AutoCompleteTextView edt_uname;
 	private EditText edt_pwd;
 	private CheckBox show_pwd;
-//	private CheckBox rem_pwd;
 	private Button btn_login;
 	
-//	private SharedPreferences preference;
-//	private Editor editor;
+
+	private SharedPreferences preference;
+	private Editor editor;
 	private Handler handler;
 	
 	@SuppressLint("HandlerLeak")
@@ -54,11 +57,16 @@ public class LoginActivity extends Activity{
 		edt_uname = (AutoCompleteTextView) findViewById(R.id.aedt_uname);
 		edt_pwd = (EditText) findViewById(R.id.edt_pwd);
 		show_pwd = (CheckBox) findViewById(R.id.cb_show_pwd);
-//		rem_pwd = (CheckBox) findViewById(R.id.cb_rem_pwd);
 		btn_login = (Button) findViewById(R.id.btn_login);
-	
-		edt_uname.setText("zhaowei");
-		edt_pwd.setText("123456");
+		preference = getSharedPreferences("user", Context.MODE_PRIVATE);
+		editor = preference.edit();
+		
+		
+		if(!preference.getString("username", "last_user").equals("last_user")){
+			edt_uname.setText(preference.getString("username", null));
+			edt_pwd.setText(preference.getString("password", null));
+		}
+
 		
 		handler = new Handler(){
 
@@ -127,6 +135,11 @@ public class LoginActivity extends Activity{
 			Message msg = Message.obtain();
 			if(loginResult){
 				msg.what = 1;
+				preference = getSharedPreferences("user", Context.MODE_PRIVATE);
+				editor = preference.edit();
+				editor.putString("username", edt_uname.getText().toString());
+				editor.putString("password", edt_pwd.getText().toString());
+				editor.commit();
 				handler.sendMessage(msg);
 			}else{
 				msg.what = 0;

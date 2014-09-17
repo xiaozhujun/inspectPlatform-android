@@ -7,6 +7,7 @@ import java.util.Map;
 import org.whut.adapter.MyListAdapter;
 import org.whut.application.MyApplication;
 import org.whut.database.entity.service.impl.HistoryServiceDao;
+import org.whut.database.entity.service.impl.InspectImageServiceDao;
 import org.whut.entity.Location;
 import org.whut.inspectplatform.R;
 import org.whut.inspectplatform.R.color;
@@ -32,6 +33,7 @@ public class HistoryActivity extends Activity{
 
 	private MyListAdapter adapter;
 	private HistoryServiceDao dao;
+	private InspectImageServiceDao imageDao;
 
 	private List<Map<String,String>> list;
 
@@ -52,6 +54,7 @@ public class HistoryActivity extends Activity{
 
 	private Location locationData;
 
+	private int userId;
 
 	@Override
 	public void onBackPressed() {
@@ -63,7 +66,7 @@ public class HistoryActivity extends Activity{
 			adapter.notifyDataSetChanged();
 			ButtonsOn = false;
 		}else{
-			new Thread(new MainActivity.HandleHistoryThread()).start();
+			new Thread(new MainActivity.UpdateBadageViewThread()).start();
 			HistoryActivity.this.finish();
 		}
 	}
@@ -77,6 +80,7 @@ public class HistoryActivity extends Activity{
 
 		MyApplication.getInstance().addActivity(this);
 		setContentView(R.layout.activity_history);
+	
 		//控件初始化
 		left_back = (ImageView) findViewById(R.id.iv_topbar_left_back);
 		tv_topbar_right_map_layout = (RelativeLayout) findViewById(R.id.tv_topbar_right_map_layout);
@@ -95,18 +99,20 @@ public class HistoryActivity extends Activity{
 			@Override
 			public void onClick(View v) {
 				// TODO Auto-generated method stub
-				new Thread(new MainActivity.HandleHistoryThread()).start();
+				new Thread(new MainActivity.UpdateBadageViewThread()).start();
 				finish();
 			}
 		});
 
 
 		dao = new HistoryServiceDao(HistoryActivity.this);
-
+		imageDao = new InspectImageServiceDao(HistoryActivity.this);
 
 		locationData = (Location) getIntent().getSerializableExtra("locationData");
 
-		list = dao.queryHistory(locationData.getUserId());
+		userId = locationData.getUserId();
+		
+		list = dao.queryHistory(userId);
 
 		if(list.size()!=0){
 			no_collection.setVisibility(View.GONE);
@@ -243,12 +249,20 @@ public class HistoryActivity extends Activity{
 		for(int j=0;j<selectedItem.size();j++){
 			//通过filePath来删除
 			String filePath = list.get(j).get("filePath");
+			//删除点检表
 			dao.deleteHistory(filePath);
 			FileUtils.deleteFile(filePath);
+			
+			//删除点检图片
+			String inspectTableName = list.get(j).get("inspectTableName");
+			List<String> inspect_images = imageDao.getInspectImages(userId,inspectTableName);
+			imageDao.deleteInspectImages(inspectTableName);
+			FileUtils.deleteImages(inspect_images);
+			
 		}
 
 		list = new ArrayList<Map<String,String>>();
-		list = dao.queryHistory(locationData.getUserId());
+		list = dao.queryHistory(userId);
 		adapter = new MyListAdapter(list, HistoryActivity.this);
 		adapter.setVisibility(View.VISIBLE);
 		listView.setAdapter(adapter);
