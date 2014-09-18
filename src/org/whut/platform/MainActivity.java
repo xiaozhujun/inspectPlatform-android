@@ -571,20 +571,33 @@ public class MainActivity extends Activity{
 			List<String> userRole = roleDao.getRoleById(userId);
 			Log.i("msg", userRole.toString());
 			List<String> list = new ArrayList<String>();
+			List<String> list2 = new ArrayList<String>();
 			try {
 				list = XmlUtils.getTableByUserRole(userRole);
+				list2 = removeDuplicate(list);
 			} catch (Exception e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-			projectNum = list.size();
+			projectNum = list2.size();
 			Message msg = Message.obtain();
 			msg.what = 5;
-			msg.obj = list;
+			msg.obj = list2;
 			handler.sendMessage(msg);
 
 		}	
 	}
+	
+	private List<String> removeDuplicate(List<String> list){
+		 for  ( int  i  =   0 ; i  <  list.size()  -   1 ; i ++ )  {    
+		for  ( int  j  =  list.size()  -   1 ; j  >  i; j -- )  {     
+	           if  (list.get(j).equals(list.get(i)))  {     
+	              list.remove(j);     
+	            }      
+	        }      
+	      }      
+	    return list;
+	} 
 
 	//查询点检任务
 	class HandleTaskThread implements Runnable{

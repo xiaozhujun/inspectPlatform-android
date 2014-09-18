@@ -26,6 +26,7 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 public class MyExpandableListAdapter extends BaseExpandableListAdapter{
 
@@ -161,14 +162,6 @@ public class MyExpandableListAdapter extends BaseExpandableListAdapter{
 			}
 		});
 		
-		
-		
-		
-		
-		
-		
-		
-		
 		final RelativeLayout bg_color = holder.layout;
 		final Button btn_com = holder.btn_comment;
 		final Button btn_res = holder.btn_result;
@@ -220,15 +213,27 @@ public class MyExpandableListAdapter extends BaseExpandableListAdapter{
 			@Override
 			public void onClick(View v) {
 				// TODO Auto-generated method stub
-				Intent it = new Intent(context,PictureActivity.class);
-				it.putExtra("itemName", childList.get(groupPosition).get(childPosition));
-				it.putExtra("itemId", itemIds.get(groupPosition).get(childPosition));
-				it.putExtra("userId", userId);
-				Log.i("Debug", childList.get(groupPosition).get(childPosition)+":"+itemIds.get(groupPosition).get(childPosition));
-				it.putExtra("inspectTableName", getInspectTableName());
-				context.startActivity(it);
+				switch(result.get(groupPosition).get(childPosition)){
+				case 0://正常
+					Toast.makeText(context, "点检结果异常才能拍照，请先修改点检结果！", Toast.LENGTH_SHORT).show();
+					break;
+				case 1://异常
+					Intent it = new Intent(context,PictureActivity.class);
+					it.putExtra("itemName", childList.get(groupPosition).get(childPosition));
+					it.putExtra("itemId", itemIds.get(groupPosition).get(childPosition));
+					it.putExtra("userId", userId);
+					Log.i("Debug", childList.get(groupPosition).get(childPosition)+":"+itemIds.get(groupPosition).get(childPosition));
+					it.putExtra("inspectTableName", getInspectTableName());
+					context.startActivity(it);
+					break;
+				case 2://无
+					Toast.makeText(context, "点检结果异常才能拍照，请先修改点检结果！", Toast.LENGTH_SHORT).show();
+					break;
+				}
 			}
 		});
+		
+
 		
 		holder.btn_result.setOnClickListener(new View.OnClickListener() {
 			

@@ -102,25 +102,30 @@ public class UploadActivity extends Activity{
 					dao.updateUploadFlag(filePath);
 					
 					//检测该点检项是否有图片
+//					if(list.size()>0){
+//						for(int i=0;i<list.size();i++){
+//							for(int j=0;j<info.size();j++){
+//								if(Integer.parseInt(list.get(i).get("itemId"))==Integer.parseInt(info.get(j).get("itemId"))){
+//									//更新数据库
+//									String temp = null;
+//									for(int k=0;k<list.size();k++){
+//										temp = list.get(k).get("filePath");
+//										Log.i("database", inspectTableName+";"+temp+";"+Integer.parseInt(list.get(i).get("itemId"))+";"
+//												+Integer.parseInt(info.get(j).get("tableRecordId"))+";"+Integer.parseInt(info.get(j).get("itemRecordId")));
+//										imageDao.updateInspectImage(inspectTableName,temp,Integer.parseInt(list.get(i).get("itemId")), 
+//												Integer.parseInt(info.get(j).get("tableRecordId")), Integer.parseInt(info.get(j).get("itemRecordId")));
+//									}
+//									
+//																		
+//								}
+//						}
+//						}
+//						
 					if(list.size()>0){
-						for(int i=0;i<list.size();i++){
-							for(int j=0;j<info.size();j++){
-								if(Integer.parseInt(list.get(i).get("itemId"))==Integer.parseInt(info.get(j).get("itemId"))){
-									//更新数据库
-									String temp = null;
-									for(int k=0;k<list.size();k++){
-										temp = list.get(k).get("filePath");
-										Log.i("database", inspectTableName+";"+temp+";"+Integer.parseInt(list.get(i).get("itemId"))+";"
-												+Integer.parseInt(info.get(j).get("tableRecordId"))+";"+Integer.parseInt(info.get(j).get("itemRecordId")));
-										imageDao.updateInspectImage(inspectTableName,temp,Integer.parseInt(list.get(i).get("itemId")), 
-												Integer.parseInt(info.get(j).get("tableRecordId")), Integer.parseInt(info.get(j).get("itemRecordId")));
-									}
-									
-																		
-								}
-							}
+						for(int i=0;i<info.size();i++){
+							imageDao.updateInspectImage(inspectTableName, list.get(i).get("filePath"), Integer.parseInt(list.get(i).get("itemId")), 
+									Integer.parseInt(info.get(i).get("tableRecordId")), Integer.parseInt(info.get(i).get("itemRecordId")));
 						}
-						
 						AlertDialog.setTitle("提示").setMessage("点检表上传成功，是否上传点检图片？")
 						.setPositiveButton("确定", new DialogInterface.OnClickListener(){
 
@@ -140,7 +145,6 @@ public class UploadActivity extends Activity{
 							}
 						}).show();
 					}else{
-						
 						AlertDialog.setTitle("提示").setMessage("点检表上传成功！").setPositiveButton("确定", new DialogInterface.OnClickListener(){
 
 							@Override
@@ -148,8 +152,7 @@ public class UploadActivity extends Activity{
 									int which) {
 								// TODO Auto-generated method stub
 								finish();
-							}
-							
+							}		
 						}).show();
 					}
 					break;
