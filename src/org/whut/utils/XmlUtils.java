@@ -21,23 +21,25 @@ import android.util.Log;
 @SuppressWarnings("unchecked")
 public class XmlUtils {
 
-	public static List<String> getTableByUserRole(String userRole) throws Exception{
+	public static List<String> getTableByUserRole(List<String> userRole) throws Exception{
 		// TODO Auto-generated method stub
 		List<String> list = new ArrayList<String>();
 		SAXReader reader = new SAXReader();
 		Document document = reader.read(new File(FileStrings.BASE_PATH+"/"+FileStrings.ROLE_TABLES));
 		Element root = document.getRootElement();
 		List<Element> elist = root.elements();
-		for(Element e : elist){
-			if(e.attribute("name").getValue().equals(userRole)){
-				if(e.elements().size()>1){
-					List<Element> list2 = e.elements();
-					for(Element e2:list2){
-						list.add(e2.attribute("name").getValue());
+		for(int i=0;i<userRole.size();i++){
+			for(Element e : elist){
+				if(e.attribute("name").getValue().equals(userRole.get(i))){
+					if(e.elements().size()>1){
+						List<Element> list2 = e.elements();
+						for(Element e2:list2){
+							list.add(e2.attribute("name").getValue());
+						}
+					}else{
+						Element ti = e.element("TableItem");
+						list.add(ti.attribute("name").getValue());
 					}
-				}else{
-					Element ti = e.element("TableItem");
-					list.add(ti.attribute("name").getValue());
 				}
 			}
 		}

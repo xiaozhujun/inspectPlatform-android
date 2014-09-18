@@ -33,8 +33,6 @@ public class JsonUtils {
 		JSONObject jsonObject = new JSONObject(message);
 		if(jsonObject.getInt("code")==200){
 			JSONObject jsonItem = jsonObject.getJSONObject("data");
-			map.put("role", jsonItem.getString("role"));
-			map.put("roleNum", jsonItem.getInt("roleNum"));
 			map.put("name", jsonItem.getString("name"));
 			map.put("userName", jsonItem.getString("userName"));
 			map.put("id", jsonItem.getInt("id"));
@@ -185,6 +183,23 @@ public class JsonUtils {
 		// TODO Auto-generated method stub
 		JSONObject jsonObject = new JSONObject(message);
 		return jsonObject.getInt("versionCode");
+	}
+
+
+	public static List<HashMap<String, String>> GetUserRoleData(String message) throws Exception{
+		// TODO Auto-generated method stub
+		List<HashMap<String,String>> list = new ArrayList<HashMap<String,String>>();
+		JSONObject jsonObject = new JSONObject(message);
+		JSONObject jsonItem = jsonObject.getJSONObject("data");
+		JSONArray jsonArray = jsonItem.getJSONArray("employeeRoleList");
+		for(int i=0;i<jsonArray.length();i++){
+			JSONObject jsonArrayItem = jsonArray.getJSONObject(i);
+			HashMap<String,String> map = new HashMap<String, String>();
+			map.put("id", jsonArrayItem.getInt("id")+"");
+			map.put("name", jsonArrayItem.getString("name"));
+			list.add(map);
+		}
+		return list;
 	}
 	
 	

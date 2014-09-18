@@ -1,6 +1,8 @@
 package org.whut.database.entity.service.impl;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 import org.whut.database.DBHelper;
 import org.whut.database.entity.service.UserService;
@@ -24,9 +26,9 @@ public class UserServiceDao implements UserService{
 	public void addUser(HashMap<String, Object> map) {
 		// TODO Auto-generated method stub
 		db.beginTransaction();
-		db.execSQL("insert into user(role,roleNum,name,userName,id,image,sex,userRole,inspectType) values(?,?,?,?,?,?,?,?,?)",
-				new Object[]{map.get("role"),map.get("roleNum"),map.get("name"),
-				map.get("userName"),map.get("id"),map.get("image"),map.get("sex"),map.get("userRole"),map.get("inspectType")});
+		db.execSQL("insert into user(name,userName,id,image,sex,userRole,appName,inspectType) values(?,?,?,?,?,?,?,?)",
+				new Object[]{map.get("name"),
+				map.get("userName"),map.get("id"),map.get("image"),map.get("sex"),map.get("userRole"),map.get("appName"),map.get("inspectType")});
 		Log.i("msg", "已完成用户添加.");
 		db.setTransactionSuccessful();
 		db.endTransaction();
@@ -56,14 +58,16 @@ public class UserServiceDao implements UserService{
 	}
 
 	@Override
-	public String getRoleById(int user_id) {
+	public List<String> getRoleById(int user_id) {
 		// TODO Auto-generated method stub
-		Cursor cursor = db.rawQuery("select * from user where id=?", new String[]{user_id+""});
+		List<String> list = new ArrayList<String>();
+		Cursor cursor = db.rawQuery("select * from userrole where id=?", new String[]{user_id+""});
 		while(cursor.moveToNext()){
-			String role = cursor.getString(cursor.getColumnIndex("role"));
-			return role;
+			String role = cursor.getString(cursor.getColumnIndex("name"));
+			list.add(role);
 		}
-		return null;
+		
+		return list;
 	}
 
 	public String findNameByUserName(String userName) {

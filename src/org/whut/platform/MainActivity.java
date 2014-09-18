@@ -14,6 +14,7 @@ import org.whut.database.entity.Task;
 import org.whut.database.entity.service.impl.HistoryServiceDao;
 import org.whut.database.entity.service.impl.InspectImageServiceDao;
 import org.whut.database.entity.service.impl.TaskServiceDao;
+import org.whut.database.entity.service.impl.UserRoleServiceDao;
 import org.whut.database.entity.service.impl.UserServiceDao;
 import org.whut.entity.Location;
 import org.whut.inspectplatform.R;
@@ -73,6 +74,7 @@ public class MainActivity extends Activity{
 	private static TaskServiceDao taskDao;
 	private static HistoryServiceDao hisDao;
 	private static InspectImageServiceDao imgDao;
+	private static UserRoleServiceDao roleDao;
 
 	private static int userId;
 	private String userName;
@@ -83,6 +85,8 @@ public class MainActivity extends Activity{
 	private String city_info;
 	private List<String> project_list;
 
+	private List<HashMap<String,String>> list_roles;
+	
 	private TextView city;
 
 	private static int projectNum;
@@ -171,6 +175,7 @@ public class MainActivity extends Activity{
 		taskDao = new TaskServiceDao(this);
 		hisDao = new HistoryServiceDao(this);
 		imgDao = new InspectImageServiceDao(this);
+		roleDao = new UserRoleServiceDao(this);
 
 		locationData = new Location();
 		taskData = new ArrayList<Task>();
@@ -251,6 +256,9 @@ public class MainActivity extends Activity{
 					locationData.setImage(image);
 					if(!userDao.findUserById(userId)){
 						userDao.addUser(params);
+						for(int i=0;i<list_roles.size();i++){
+							roleDao.addUserRole(userId, list_roles.get(i).get("name"));
+						}
 					}
 					break;
 				case 2://所有配置文件下载完成,再开启定位服务
@@ -378,6 +386,8 @@ public class MainActivity extends Activity{
 			//已添加的用户，则从本地数据库中取数据
 			//通过登录界面传来的用户名：zhaowei，查找数据
 			userId = userDao.findUserByUserName(userName);
+			
+			
 			locationData.setUserId(userId);
 			//点检人员姓名，非用户名
 			String name = userDao.findNameByUserName(userName);
@@ -511,6 +521,7 @@ public class MainActivity extends Activity{
 			Message msg = Message.obtain();
 			try {
 				msg.obj = JsonUtils.GetUserData(message);
+				list_roles = JsonUtils.GetUserRoleData(message);
 				if(msg.obj==null){
 					msg.what = 0;
 				}else{
@@ -557,7 +568,8 @@ public class MainActivity extends Activity{
 		@Override
 		public void run() {
 			// TODO Auto-generated method stub
-			String userRole = userDao.getRoleById(userId);
+			List<String> userRole = roleDao.getRoleById(userId);
+			Log.i("msg", userRole.toString());
 			List<String> list = new ArrayList<String>();
 			try {
 				list = XmlUtils.getTableByUserRole(userRole);
