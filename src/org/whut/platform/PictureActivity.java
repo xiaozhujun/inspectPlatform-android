@@ -137,9 +137,11 @@ public class PictureActivity extends Activity{
 						// TODO Auto-generated method stub
 						Toast.makeText(PictureActivity.this, "文件已保存在<"+filePath+">中", Toast.LENGTH_SHORT).show();
 						//数据库中建立关联
-						if(itemId!=0){
-							dao.addInspectImage(userId,itemId,filePath,inspectTableName,itemName,0);
-						}
+						dao.addInspectImage(userId,itemId,filePath,inspectTableName,itemName,0);
+						int groupPosition = getIntent().getIntExtra("groupPosition", 0);
+						int childPosition = getIntent().getIntExtra("childPosition", 0);
+						InspectActivity.adapter.btn_list.get(groupPosition).set(childPosition, true);
+						InspectActivity.adapter.notifyDataSetChanged();
 						finish();
 					}
 				});

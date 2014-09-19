@@ -26,7 +26,7 @@ public class InspectImageServiceDao implements InspectImageService{
 	@Override
 	public void addInspectImage(int userId,int itemId, String filePath,String inspectTableName,String itemName,int uploadFlag) {
 		// TODO Auto-generated method stub
-		Log.i("database", userId+","+"------addInspectImage");
+		Log.i("imageuploaddebug", itemId+","+inspectTableName+"------addInspectImage");
 		db.beginTransaction();
 		db.execSQL("insert into inspectimage(userId,itemId,filePath,inspectTableName,itemName,uploadFlag) values(?,?,?,?,?,?)",new Object[]{userId,itemId,filePath,inspectTableName,itemName,uploadFlag});
 		db.setTransactionSuccessful();
@@ -79,7 +79,7 @@ public class InspectImageServiceDao implements InspectImageService{
 		// TODO Auto-generated method stub
 		db.beginTransaction();
 		db.execSQL("update inspectimage set tableRecordId=?,itemRecordId=? where inspectTableName=? and itemId=? and filePath = ?",new Object[]{tableRecordId,itemRecordId,inspectTableName,itemId,filePath});
-		Log.i("database", itemId+";"+tableRecordId+";"+itemRecordId+";"+filePath);
+		Log.i("imageuploaddebug", "更新："+itemId+";"+tableRecordId+";"+itemRecordId+";"+inspectTableName);
 		db.setTransactionSuccessful();
 		db.endTransaction();
 		
@@ -168,6 +168,15 @@ public class InspectImageServiceDao implements InspectImageService{
 			list.add(cursor.getString(cursor.getColumnIndex("filePath")));
 		}
 		return list;
+	}
+
+	public boolean judgeStatus(String inspectTableName, Integer itemId) {
+		// TODO Auto-generated method stub
+		Cursor cursor = db.rawQuery("select * from inspectimage where inspectTableName =? and itemId = ?", new String[]{inspectTableName,itemId+""});
+		while(cursor.moveToNext()){
+			return true;
+		}
+		return false;
 	}
 
 	

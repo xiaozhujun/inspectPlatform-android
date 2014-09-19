@@ -68,7 +68,7 @@ public class InspectActivity extends Activity implements ExpandableListView.OnGr
 	private List<List<String>> childList;
 	private List<List<Integer>> itemIds;
 	private List<List<String[]>> resultList;
-	private MyExpandableListAdapter adapter;
+	public static MyExpandableListAdapter adapter;
 
 	private List<Boolean> isInspected;
 	//用户是否达成点检条件允许保存
@@ -139,7 +139,7 @@ public class InspectActivity extends Activity implements ExpandableListView.OnGr
 	}
 	
 	
-	
+
 	@SuppressLint("HandlerLeak")
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {

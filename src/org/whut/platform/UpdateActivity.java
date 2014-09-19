@@ -1,5 +1,6 @@
 package org.whut.platform;
 
+import org.whut.application.MyApplication;
 import org.whut.inspectplatform.R;
 
 import android.app.Activity;
@@ -13,6 +14,7 @@ public class UpdateActivity extends Activity{
 		// TODO Auto-generated method stub
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_update);
+		MyApplication.getInstance().addActivity(this);
 		Toast.makeText(getApplicationContext(), "当前已是最新版本！", Toast.LENGTH_SHORT).show();
 	}
 	

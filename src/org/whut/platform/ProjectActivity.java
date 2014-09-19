@@ -3,6 +3,7 @@ package org.whut.platform;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.whut.application.MyApplication;
 import org.whut.entity.Location;
 import org.whut.inspectplatform.R;
 
@@ -33,6 +34,8 @@ public class ProjectActivity extends Activity{
 		super.onCreate(savedInstanceState);
 		
 		setContentView(R.layout.activity_project);
+		
+		MyApplication.getInstance().addActivity(this);
 	
 		listView = (ListView) findViewById(R.id.listView1);
 		

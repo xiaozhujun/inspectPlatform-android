@@ -9,6 +9,7 @@ import java.util.Map;
 
 import org.apache.http.client.ClientProtocolException;
 import org.whut.adapter.MyImageListAdapter;
+import org.whut.application.MyApplication;
 import org.whut.client.CasClient;
 import org.whut.database.entity.service.impl.InspectImageServiceDao;
 import org.whut.inspectplatform.R;
@@ -63,6 +64,7 @@ public class ImageUploadActivity extends Activity{
 		// TODO Auto-generated method stub
 		super.onCreate(savedInstanceState);
 
+		MyApplication.getInstance().addActivity(this);
 		setContentView(R.layout.activity_imageupload);
 		
 		

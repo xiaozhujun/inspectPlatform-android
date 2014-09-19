@@ -50,6 +50,9 @@ public class MyExpandableListAdapter extends BaseExpandableListAdapter{
 	
 	private int userId;
 	
+	//保存按钮状态
+	public List<List<Boolean>> btn_list;
+	
 	public MyExpandableListAdapter(Context context,List<String> groupList,List<List<String>> childList,List<List<Integer>> itemIds,List<List<String[]>> resultList,String inspectTableName,int userId){
 		this.context = context;
 		this.groupList = groupList;
@@ -59,13 +62,14 @@ public class MyExpandableListAdapter extends BaseExpandableListAdapter{
 		this.inspectTableName = inspectTableName;
 		this.userId = userId;
 		inflater = LayoutInflater.from(context);
-		
 		//初始化数据
 		commentList = new ArrayList<List<Map<String,String>>>();
 		result = new ArrayList<List<Integer>>();
+		btn_list = new ArrayList<List<Boolean>>();
 		for(int i=0;i<groupList.size();i++){
 			List<Map<String,String>> list = new ArrayList<Map<String,String>>();
 			List<Integer> list2 = new ArrayList<Integer>();
+			List<Boolean> list3 = new ArrayList<Boolean>();
 			for(int j=0;j<childList.get(i).size();j++){
 				Map<String,String> map = new HashMap<String,String>();
 				map.put("comment", "");
@@ -73,9 +77,11 @@ public class MyExpandableListAdapter extends BaseExpandableListAdapter{
 				list.add(map);
 				// 0 , 代表正常
 				list2.add(0);
+				list3.add(false);
 			}
 			commentList.add(list);
 			result.add(list2);
+			btn_list.add(list3);
 		}
 	}
 	
@@ -207,7 +213,6 @@ public class MyExpandableListAdapter extends BaseExpandableListAdapter{
 		}
 		
 		
-		holder.btn_camera.setText("拍照");
 		holder.btn_camera.setOnClickListener(new View.OnClickListener() {
 			
 			@Override
@@ -222,8 +227,9 @@ public class MyExpandableListAdapter extends BaseExpandableListAdapter{
 					it.putExtra("itemName", childList.get(groupPosition).get(childPosition));
 					it.putExtra("itemId", itemIds.get(groupPosition).get(childPosition));
 					it.putExtra("userId", userId);
-					Log.i("Debug", childList.get(groupPosition).get(childPosition)+":"+itemIds.get(groupPosition).get(childPosition));
 					it.putExtra("inspectTableName", getInspectTableName());
+					it.putExtra("groupPosition", groupPosition);
+					it.putExtra("childPosition", childPosition);
 					context.startActivity(it);
 					break;
 				case 2://无
@@ -232,6 +238,14 @@ public class MyExpandableListAdapter extends BaseExpandableListAdapter{
 				}
 			}
 		});
+		
+		if(btn_list.get(groupPosition).get(childPosition)){
+			holder.btn_camera.setClickable(false);
+			holder.btn_camera.setText("已拍照");
+		}else{
+			holder.btn_camera.setClickable(true);
+			holder.btn_camera.setText("拍照");
+		}
 		
 
 		

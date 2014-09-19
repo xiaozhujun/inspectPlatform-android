@@ -1,6 +1,7 @@
 package org.whut.platform;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -37,22 +38,22 @@ public class UploadActivity extends Activity{
 	private String tableName;
 	private String inspectTime;
 	private String filePath;
-	
+
 	private String inspectTableName;
-	
+
 	public static Handler handler;
 	private Builder AlertDialog;
 	private ProgressDialog ProcessDialog;
 
 	private Location locationData;
-	
+
 	private HistoryServiceDao dao;
 	private InspectImageServiceDao imageDao;
 
 	//保存点检中图片的地址，用于上传
 	private List<Map<String,String>> list;
 	private List<Map<String,String>> info;
-	
+
 	@SuppressLint("HandlerLeak")
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -60,7 +61,7 @@ public class UploadActivity extends Activity{
 		setContentView(R.layout.activity_upload);
 
 		MyApplication.getInstance().addActivity(this);
-		
+
 		locationData = (Location) getIntent().getSerializableExtra("locationData");
 
 		userName = locationData.getUserName();
@@ -70,7 +71,7 @@ public class UploadActivity extends Activity{
 
 		dao = new HistoryServiceDao(UploadActivity.this);
 		imageDao = new InspectImageServiceDao(UploadActivity.this);
-		
+
 		initDialog();
 
 		((TextView)findViewById(R.id.userName_upload)).setText(userName);
@@ -100,31 +101,51 @@ public class UploadActivity extends Activity{
 					ProcessDialog.dismiss();
 					//更新历史表中上传状态
 					dao.updateUploadFlag(filePath);
-					
-					//检测该点检项是否有图片
-//					if(list.size()>0){
-//						for(int i=0;i<list.size();i++){
-//							for(int j=0;j<info.size();j++){
-//								if(Integer.parseInt(list.get(i).get("itemId"))==Integer.parseInt(info.get(j).get("itemId"))){
-//									//更新数据库
-//									String temp = null;
-//									for(int k=0;k<list.size();k++){
-//										temp = list.get(k).get("filePath");
-//										Log.i("database", inspectTableName+";"+temp+";"+Integer.parseInt(list.get(i).get("itemId"))+";"
-//												+Integer.parseInt(info.get(j).get("tableRecordId"))+";"+Integer.parseInt(info.get(j).get("itemRecordId")));
-//										imageDao.updateInspectImage(inspectTableName,temp,Integer.parseInt(list.get(i).get("itemId")), 
-//												Integer.parseInt(info.get(j).get("tableRecordId")), Integer.parseInt(info.get(j).get("itemRecordId")));
-//									}
-//									
-//																		
-//								}
-//						}
-//						}
-//						
-					if(list.size()>0){
-						for(int i=0;i<info.size();i++){
-							imageDao.updateInspectImage(inspectTableName, list.get(i).get("filePath"), Integer.parseInt(list.get(i).get("itemId")), 
-									Integer.parseInt(info.get(i).get("tableRecordId")), Integer.parseInt(info.get(i).get("itemRecordId")));
+
+					if(list.size()>0){//存在点检图片
+						if(list.size()<info.size()){//有的异常项不包含图片
+							List<Map<String,String>> newInfo = new ArrayList<Map<String,String>>();
+							for(int j=0;j<list.size();j++){
+								for(int k=0;k<info.size();k++){
+									if(Integer.parseInt(list.get(j).get("itemId"))==Integer.parseInt(info.get(k).get("itemId"))){
+										HashMap<String,String> temp = new HashMap<String,String>();
+										temp.put("itemId", info.get(k).get("itemId"));
+										temp.put("itemRecordId", info.get(k).get("itemRecordId"));
+										temp.put("tableRecordId", info.get(k).get("tableRecordId"));
+										temp.put("filePath", list.get(j).get("filePath"));
+										newInfo.add(temp);
+									}
+								}	
+							}
+							
+							for(int i=0;i<newInfo.size();i++){
+								Log.i("imageuploaddebug",inspectTableName+","+Integer.parseInt(newInfo.get(i).get("itemId"))+","+Integer.parseInt(newInfo.get(i).get("tableRecordId"))+","+Integer.parseInt(newInfo.get(i).get("itemRecordId"))+"---updateInspectImage(有异常项无图片)");
+								imageDao.updateInspectImage(inspectTableName, newInfo.get(i).get("filePath"),
+										Integer.parseInt(newInfo.get(i).get("itemId")), Integer.parseInt(newInfo.get(i).get("tableRecordId")), Integer.parseInt(newInfo.get(i).get("itemRecordId")));
+							}
+						}else{//所有异常项均有图片
+							
+							//先找到对应关系
+							List<Map<String,String>> newInfo = new ArrayList<Map<String,String>>();
+							for(int i=0;i<list.size();i++){
+								for(int j=0;j<info.size();j++){
+									if(Integer.parseInt(list.get(i).get("itemId"))==Integer.parseInt(info.get(j).get("itemId"))){
+										HashMap<String,String> temp = new HashMap<String, String>();
+										temp.put("itemId", info.get(j).get("itemId"));
+										temp.put("itemRecordId", info.get(j).get("itemRecordId"));
+										temp.put("tableRecordId", info.get(j).get("tableRecordId"));
+										temp.put("filePath", list.get(i).get("filePath"));
+										newInfo.add(temp);
+									}
+								}
+							}
+		
+							//在更新本地数据库
+							for(int i=0;i<newInfo.size();i++){
+								Log.i("imageuploaddebug", inspectTableName+","+newInfo.get(i).get("filePath")+","+Integer.parseInt(newInfo.get(i).get("itemId"))+","+Integer.parseInt(newInfo.get(i).get("tableRecordId"))+","+Integer.parseInt(newInfo.get(i).get("itemRecordId"))+"---updateInspectImage(所有异常项均有图片)");
+								imageDao.updateInspectImage(inspectTableName, newInfo.get(i).get("filePath"), Integer.parseInt(newInfo.get(i).get("itemId")), 
+										Integer.parseInt(newInfo.get(i).get("tableRecordId")), Integer.parseInt(newInfo.get(i).get("itemRecordId")));
+							}	
 						}
 						AlertDialog.setTitle("提示").setMessage("点检表上传成功，是否上传点检图片？")
 						.setPositiveButton("确定", new DialogInterface.OnClickListener(){
@@ -135,16 +156,16 @@ public class UploadActivity extends Activity{
 								// TODO Auto-generated method stub
 								new Thread(new UploadImages(0)).start();
 							}
-							
+
 						}).setNegativeButton("取消", new DialogInterface.OnClickListener() {
-							
+
 							@Override
 							public void onClick(DialogInterface dialog, int which) {
 								// TODO Auto-generated method stub
 								finish();
 							}
 						}).show();
-					}else{
+					}else{//不存在点检图片
 						AlertDialog.setTitle("提示").setMessage("点检表上传成功！").setPositiveButton("确定", new DialogInterface.OnClickListener(){
 
 							@Override
@@ -191,9 +212,9 @@ public class UploadActivity extends Activity{
 				ProcessDialog.show();
 			}
 		});
-		
+
 		((RelativeLayout)findViewById(R.id.upload_later)).setOnClickListener(new View.OnClickListener() {
-			
+
 			@Override
 			public void onClick(View v) {
 				// TODO Auto-generated method stub
@@ -223,7 +244,7 @@ public class UploadActivity extends Activity{
 		});
 
 	}
-	
+
 
 	class UploadFileThread implements Runnable{
 
@@ -251,13 +272,13 @@ public class UploadActivity extends Activity{
 			handler.sendMessage(msg);
 		}
 	}
-	
+
 	class UploadImages implements Runnable{
 
 		int i;
-		
-		
-		
+
+
+
 		public UploadImages(int i) {
 			// TODO Auto-generated constructor stub
 			this.i = i;
@@ -272,15 +293,15 @@ public class UploadActivity extends Activity{
 			HashMap<String,String> params = new HashMap<String, String>();
 			Log.i("msg", list.get(i).get("itemId")+";");
 			params.put("itemId", list.get(i).get("itemId"));
-			
+
 			Log.i("database", "i="+i+";"+imageDao.getTableRecordId(list.get(i).get("itemId")));
 			Log.i("database", "i="+i+";"+imageDao.getItemRecordId(list.get(i).get("itemId")));
-			
+
 			params.put("tableRecordId", imageDao.getTableRecordId(list.get(i).get("itemId")));
-			
-			
+
+
 			params.put("itemRecordId", imageDao.getItemRecordId(list.get(i).get("itemId")));
-			
+
 			try {
 				String message = CasClient.getInstance().uploadImage(UrlStrings.UPLOAD_IMAGE_FILE, list.get(i).get("filePath"), params);
 				if(JsonUtils.getInfo(message)==200){
@@ -301,9 +322,9 @@ public class UploadActivity extends Activity{
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-			
+
 		}
-		
+
 	}
 
 }
