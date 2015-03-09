@@ -256,8 +256,10 @@ public class MainActivity extends Activity{
 					locationData.setImage(image);
 					if(!userDao.findUserById(userId)){
 						userDao.addUser(params);
-						for(int i=0;i<list_roles.size();i++){
-							roleDao.addUserRole(userId, list_roles.get(i).get("name"));
+						if(list_roles!=null){
+							for(int i=0;i<list_roles.size();i++){
+								roleDao.addUserRole(userId, list_roles.get(i).get("name"));
+							}
 						}
 					}
 					break;
@@ -352,7 +354,13 @@ public class MainActivity extends Activity{
 							}
 						}
 					});
-					dialog.dismiss();
+					if(list_roles!=null){
+						dialog.dismiss();
+					}else{
+						dialog.dismiss();
+						Toast.makeText(MainActivity.this, "尚未配置点检人员类型！", Toast.LENGTH_SHORT).show();
+					}
+					
 					break;
 					
 				case 9:
@@ -521,7 +529,6 @@ public class MainActivity extends Activity{
 			Message msg = Message.obtain();
 			try {
 				msg.obj = JsonUtils.GetUserData(message);
-				list_roles = JsonUtils.GetUserRoleData(message);
 				if(msg.obj==null){
 					msg.what = 0;
 				}else{
@@ -531,6 +538,13 @@ public class MainActivity extends Activity{
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
+			
+			try{
+				list_roles = JsonUtils.GetUserRoleData(message);
+			}catch(Exception e){
+				list_roles=null;
+			}
+			
 			MainActivity.handler.sendMessage(msg);
 		}
 
