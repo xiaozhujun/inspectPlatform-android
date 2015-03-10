@@ -109,6 +109,8 @@ public class MainActivity extends Activity{
 	
 	private int inspectType;
 
+	//是否配置点检类型
+	private boolean isConfigured = true;
 
 	int[] images = {R.drawable.img_project,R.drawable.img_task,R.drawable.img_history,R.drawable.img_upload,R.drawable.img_update};
 	String[] functions ={"点检项目","待做任务","点检记录","图片上传","版本信息"};
@@ -354,10 +356,18 @@ public class MainActivity extends Activity{
 							}
 						}
 					});
-					if(list_roles!=null){
+					if(isConfigured){
 						dialog.dismiss();
 					}else{
 						dialog.dismiss();
+						
+						try{
+							Thread.sleep(2000);
+						}catch(Exception e){
+							e.printStackTrace();
+						}
+						
+						
 						Toast.makeText(MainActivity.this, "尚未配置点检人员类型！", Toast.LENGTH_SHORT).show();
 					}
 					
@@ -402,6 +412,8 @@ public class MainActivity extends Activity{
 			locationData.setUserName(name);
 			image = userDao.findImageByUserName(userName);
 			locationData.setImage(image);
+			
+			new Thread(new GetCurrentUserThread()).start();
 		}
 
 		//开始数据初始化服务
@@ -540,9 +552,13 @@ public class MainActivity extends Activity{
 			}
 			
 			try{
+				
 				list_roles = JsonUtils.GetUserRoleData(message);
+			
 			}catch(Exception e){
+				e.printStackTrace();
 				list_roles=null;
+				isConfigured = false;
 			}
 			
 			MainActivity.handler.sendMessage(msg);
