@@ -1,2 +1,8 @@
 bin
 gen
+.idea
+.settings
+.classpath
+.project
+*.iml
+

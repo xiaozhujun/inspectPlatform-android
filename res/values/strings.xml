@@ -4,7 +4,7 @@
   
   
   <!-- 登录界面相关 -->
-    <string name="logo_name">起重机械</string>
+    <string name="logo_name">物联电梯</string>
     <string name="project_name">智能点检平台</string>
     <string name="divider">分割线</string>
     <string name="login_uname">请输入用户名</string>

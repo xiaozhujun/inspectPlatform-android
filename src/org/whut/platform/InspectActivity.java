@@ -182,8 +182,10 @@ public class InspectActivity extends Activity implements ExpandableListView.OnGr
 					//此方法将点检结果保存在相应的点检表中，并返回点检表名
 					switch(inspectType){
 					case 1:
+						allow_save=true;
 						break;
 					case 2://至少一卡
+						allow_save=true;
 						break;
 					case 3://全部卡
 						allow_save = true;
@@ -262,7 +264,7 @@ public class InspectActivity extends Activity implements ExpandableListView.OnGr
 					menuDialog.dismiss();
 					Builder alertDialog2 = new AlertDialog.Builder(InspectActivity.this);
 					alertDialog2.setTitle("提示").setMessage("是否放弃此次点检结果？").setNegativeButton("取消", null)
-					.setPositiveButton("确定", new DialogInterface.OnClickListener() {
+					.setPositiveButton("不保存", new DialogInterface.OnClickListener() {
 
 						@Override
 						public void onClick(DialogInterface dialog, int which) {
@@ -270,13 +272,29 @@ public class InspectActivity extends Activity implements ExpandableListView.OnGr
 							//处理图片
 							deleteImages();
 							FileUtils.deleteFile(filePath);
-							if(taskData!=null){
-								Intent it = new Intent(InspectActivity.this,TaskActivity.class);
-								it.putExtra("taskData", (Serializable)taskData);
+							if (taskData != null) {
+								Intent it = new Intent(InspectActivity.this, TaskActivity.class);
+								it.putExtra("taskData", (Serializable) taskData);
 								it.putExtra("locationData", locationData);
 								startActivity(it);
 								finish();
-							}else{
+							} else {
+								finish();
+							}
+						}
+					}).setNeutralButton("保存", new DialogInterface.OnClickListener() {
+
+						@Override
+						public void onClick(DialogInterface dialog, int which) {
+							// TODO Auto-generated method stub
+							//处理图片
+							if (taskData != null) {
+								Intent it = new Intent(InspectActivity.this, TaskActivity.class);
+								it.putExtra("taskData", (Serializable) taskData);
+								it.putExtra("locationData", locationData);
+								startActivity(it);
+								finish();
+							} else {
 								finish();
 							}
 						}
@@ -350,20 +368,20 @@ public class InspectActivity extends Activity implements ExpandableListView.OnGr
 				// TODO Auto-generated method stub
 				Builder alertDialog = new AlertDialog.Builder(InspectActivity.this);
 				alertDialog.setTitle("提示").setMessage("是否放弃此次点检结果？").setNegativeButton("取消", null)
-				.setPositiveButton("确定", new DialogInterface.OnClickListener() {
+				.setPositiveButton("不保存", new DialogInterface.OnClickListener() {
 
 					@Override
 					public void onClick(DialogInterface dialog, int which) {
 						// TODO Auto-generated method stub
 						deleteImages();
 						FileUtils.deleteFile(filePath);
-						if(taskData!=null){
-							Intent it = new Intent(InspectActivity.this,TaskActivity.class);
-							it.putExtra("taskData", (Serializable)taskData);
+						if (taskData != null) {
+							Intent it = new Intent(InspectActivity.this, TaskActivity.class);
+							it.putExtra("taskData", (Serializable) taskData);
 							it.putExtra("locationData", locationData);
 							startActivity(it);
 							finish();
-						}else{
+						} else {
 							finish();
 						}
 					}
@@ -447,7 +465,8 @@ public class InspectActivity extends Activity implements ExpandableListView.OnGr
 
 			userId = locationData.getUserId();
 			
-			inspectType = new UserServiceDao(InspectActivity.this).findInspectTypeByUserId(userId);
+			//inspectType = new UserServiceDao(InspectActivity.this).findInspectTypeByUserId(userId);
+			inspectType=1;
 			
 			locationData.setInspectTableName(tableName);
 			
@@ -577,20 +596,35 @@ public class InspectActivity extends Activity implements ExpandableListView.OnGr
 		// TODO Auto-generated method stub
 		Builder alertDialog = new AlertDialog.Builder(InspectActivity.this);
 		alertDialog.setTitle("提示").setMessage("是否放弃此次点检结果？").setNegativeButton("取消", null)
-		.setPositiveButton("确定", new DialogInterface.OnClickListener() {
+		.setPositiveButton("不保存", new DialogInterface.OnClickListener() {
 
 			@Override
 			public void onClick(DialogInterface dialog, int which) {
 				// TODO Auto-generated method stub
 				deleteImages();
 				FileUtils.deleteFile(filePath);
-				if(taskData!=null){
-					Intent it = new Intent(InspectActivity.this,TaskActivity.class);
-					it.putExtra("taskData", (Serializable)taskData);
+				if (taskData != null) {
+					Intent it = new Intent(InspectActivity.this, TaskActivity.class);
+					it.putExtra("taskData", (Serializable) taskData);
 					it.putExtra("locationData", locationData);
 					startActivity(it);
 					finish();
-				}else{
+				} else {
+					finish();
+				}
+			}
+		}).setNeutralButton("保存", new DialogInterface.OnClickListener() {
+
+			@Override
+			public void onClick(DialogInterface dialog, int which) {
+				// TODO Auto-generated method stub
+				if (taskData != null) {
+					Intent it = new Intent(InspectActivity.this, TaskActivity.class);
+					it.putExtra("taskData", (Serializable) taskData);
+					it.putExtra("locationData", locationData);
+					startActivity(it);
+					finish();
+				} else {
 					finish();
 				}
 			}

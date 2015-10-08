@@ -60,7 +60,11 @@
 
         <meta-data
             android:name="com.baidu.lbsapi.API_KEY"
-            android:value="kkmswlGPqlHH4PQ1CKD1kWXL" />
+            android:value="DSkLXWGhKuR8FCgUNgLgKGwL" />
+        <!--
+        发布密钥：DSkLXWGhKuR8FCgUNgLgKGwL
+        本机测试密钥：6n3hAn3VAUiorr3MWvwAw7Lm
+        -->
 
         <service
             android:name="com.baidu.location.f"

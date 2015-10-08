@@ -84,7 +84,7 @@ public class CasClient
 		if(instance==null){ 
 			synchronized(CasClient.class){
 				if(instance==null){
-					instance = new CasClient("http://www.cseicms.com/inspectCas/v1/");
+					instance = new CasClient("http://123.57.236.123/cas/v1/");
 				}
 			}
 		}
